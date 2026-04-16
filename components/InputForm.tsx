@@ -15,8 +15,10 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isProcessing }) 
     studentName: '',
     requirements: '',
     referenceLinks: '',
-    targetPageCount: '30',
+    targetPageCount: 'AI 추천',
     analysisOptions: '',
+    includeCoverImage: true,
+    includeBodyImages: true,
     resumeFile: null,
     coverLetterFile: null,
     interviewNoticeFile: null,
@@ -26,9 +28,14 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isProcessing }) 
     otherFiles: [],
   });
 
-  const handleTextChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleTextChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCheckboxChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setFormData(prev => ({ ...prev, [name]: checked }));
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -65,13 +72,13 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isProcessing }) 
 
       <div className="mb-12 text-center relative z-10">
         <h2 className="text-3xl font-bold text-white tracking-tight">지원자 정보 입력</h2>
-        <p className="text-slate-400 mt-2">정확한 분석을 위해 서류와 정보를 빠짐없이 입력해주세요.</p>
+        <p className="text-slate-400 mt-2">정확한 분석을 위해 서류와 정보를 빠짐없이 입력해주세요. <span className="text-amber-500 text-sm ml-2">(* 필수 입력 항목)</span></p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 relative z-10">
         <div className="space-y-8">
             <div>
-            <label className="block text-sm font-bold text-amber-500 mb-2 uppercase tracking-wider">Solution Type <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-bold text-amber-500 mb-2 uppercase tracking-wider">솔루션 종류 <span className="text-red-500">*</span></label>
             <div className="relative">
                 <select
                     name="solutionType"
@@ -84,6 +91,8 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isProcessing }) 
                     <option value="서류 맞춤 솔루션" className="bg-[#1a1a1a] text-white">서류 맞춤 솔루션</option>
                     <option value="필기 맞춤 솔루션" className="bg-[#1a1a1a] text-white">필기 맞춤 솔루션</option>
                     <option value="면접 맞춤 솔루션" className="bg-[#1a1a1a] text-white">면접 맞춤 솔루션</option>
+                    <option value="기업&직무분석 솔루션" className="bg-[#1a1a1a] text-white">기업&직무분석 솔루션</option>
+                    <option value="요청사항 맞춤 솔루션" className="bg-[#1a1a1a] text-white">요청사항 맞춤 솔루션</option>
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-amber-500">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
@@ -91,7 +100,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isProcessing }) 
             </div>
             </div>
             <div>
-            <label className="block text-sm font-bold text-amber-500 mb-2 uppercase tracking-wider">Target Company <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-bold text-amber-500 mb-2 uppercase tracking-wider">지원 기업명 <span className="text-red-500">*</span></label>
             <div className="relative">
                 <input
                     type="text"
@@ -105,7 +114,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isProcessing }) 
             </div>
             </div>
             <div>
-            <label className="block text-sm font-bold text-amber-500 mb-2 uppercase tracking-wider">Job Title <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-bold text-amber-500 mb-2 uppercase tracking-wider">지원 직무 <span className="text-red-500">*</span></label>
              <div className="relative">
                 <input
                     type="text"
@@ -128,6 +137,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isProcessing }) 
                     value={formData.targetPageCount}
                     onChange={handleTextChange as any}
                 >
+                    <option value="AI 추천" className="bg-[#1a1a1a] text-white">AI 추천 (자동 최적화)</option>
                     <option value="20" className="bg-[#1a1a1a] text-white">20페이지</option>
                     <option value="30" className="bg-[#1a1a1a] text-white">30페이지</option>
                     <option value="50" className="bg-[#1a1a1a] text-white">50페이지</option>
@@ -144,7 +154,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isProcessing }) 
         
         <div className="space-y-8">
             <div>
-            <label className="block text-sm font-bold text-amber-500 mb-2 uppercase tracking-wider">Interview Type</label>
+            <label className="block text-sm font-bold text-amber-500 mb-2 uppercase tracking-wider">면접 유형</label>
             <div className="relative">
                 <input
                     type="text"
@@ -157,12 +167,11 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isProcessing }) 
             </div>
             </div>
             <div>
-            <label className="block text-sm font-bold text-amber-500 mb-2 uppercase tracking-wider">Applicant Name <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-bold text-amber-500 mb-2 uppercase tracking-wider">지원자 성함</label>
              <div className="relative">
                 <input
                     type="text"
                     name="studentName"
-                    required
                     className="w-full px-5 py-4 bg-white/5 rounded-xl border border-white/10 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-white placeholder:text-slate-600 font-medium"
                     placeholder="예: 김코칭"
                     value={formData.studentName}
@@ -214,8 +223,45 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isProcessing }) 
       </div>
 
       <div className="mb-12 relative z-10">
+        <label className="block text-sm font-bold text-amber-500 mb-4 uppercase tracking-wider">이미지 생성 옵션</label>
+        <div className="flex flex-wrap gap-6">
+            <label className="flex items-center space-x-3 cursor-pointer group/cb">
+                <div className="relative">
+                    <input
+                        type="checkbox"
+                        name="includeCoverImage"
+                        className="peer hidden"
+                        checked={formData.includeCoverImage}
+                        onChange={handleCheckboxChange}
+                    />
+                    <div className="w-6 h-6 border-2 border-white/20 rounded-md bg-white/5 peer-checked:bg-amber-500 peer-checked:border-amber-500 transition-all flex items-center justify-center">
+                        <svg className="w-4 h-4 text-black opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                </div>
+                <span className="text-white font-medium group-hover/cb:text-amber-400 transition-colors">프리미엄 표지 이미지 생성</span>
+            </label>
+
+            <label className="flex items-center space-x-3 cursor-pointer group/cb">
+                <div className="relative">
+                    <input
+                        type="checkbox"
+                        name="includeBodyImages"
+                        className="peer hidden"
+                        checked={formData.includeBodyImages}
+                        onChange={handleCheckboxChange}
+                    />
+                    <div className="w-6 h-6 border-2 border-white/20 rounded-md bg-white/5 peer-checked:bg-amber-500 peer-checked:border-amber-500 transition-all flex items-center justify-center">
+                        <svg className="w-4 h-4 text-black opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                </div>
+                <span className="text-white font-medium group-hover/cb:text-amber-400 transition-colors">본문 인포그래픽 이미지 생성</span>
+            </label>
+        </div>
+      </div>
+
+      <div className="mb-12 relative z-10">
         <h3 className="text-lg font-bold text-white mb-6 pb-2 border-b border-white/10 flex items-center justify-between">
-            <span>Documents Attachment</span>
+            <span>서류 첨부</span>
             <div className="flex flex-col items-end">
                 <span className="text-[10px] font-normal text-amber-500 bg-amber-900/20 px-2 py-1 rounded border border-amber-500/20 mb-1">
                     HWP, PPT는 반드시 <span className="font-bold underline">PDF로 저장</span>하여 업로드하세요
@@ -289,7 +335,7 @@ const FileInput: React.FC<FileInputProps> = ({ label, name, onChange, file }) =>
                 </div>
             ) : (
                 <div className="flex items-center text-slate-500 text-xs font-medium">
-                     <span className="px-2 py-1 bg-white/10 rounded text-slate-400 mr-2 group-hover:bg-amber-500 group-hover:text-black transition-colors">UPLOAD</span>
+                     <span className="px-2 py-1 bg-white/10 rounded text-slate-400 mr-2 group-hover:bg-amber-500 group-hover:text-black transition-colors">업로드</span>
                      <span>파일 선택</span>
                 </div>
             )}
@@ -320,7 +366,7 @@ const MultipleFileInput: React.FC<MultipleFileInputProps> = ({ label, name, onCh
         />
         <div className="flex items-center mt-3">
             <div className="flex items-center text-slate-500 text-xs font-medium">
-                 <span className="px-2 py-1 bg-white/10 rounded text-slate-400 mr-2 group-hover:bg-amber-500 group-hover:text-black transition-colors">UPLOAD</span>
+                 <span className="px-2 py-1 bg-white/10 rounded text-slate-400 mr-2 group-hover:bg-amber-500 group-hover:text-black transition-colors">업로드</span>
                  <span>파일 추가</span>
             </div>
         </div>

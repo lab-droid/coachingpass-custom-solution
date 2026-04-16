@@ -7,7 +7,7 @@ import { generateReportSection, generateCoverImage, generateInfographic } from '
 import { downloadAsWord } from './services/documentService';
 import { TaskState, TaskProgress } from './types';
 
-const getInitialTasks = (solutionType: string): TaskProgress[] => {
+const getInitialTasks = (solutionType: string, includeCover: boolean, includeBody: boolean): TaskProgress[] => {
     const getLabels = (type: string) => {
         if (type === "진로 맞춤 솔루션") {
             return [
@@ -33,6 +33,22 @@ const getInitialTasks = (solutionType: string): TaskProgress[] => {
                 "취약점 분석 및 보완 가이드",
                 "필기 합격 실전 팁 요약"
             ];
+        } else if (type === "기업&직무분석 솔루션") {
+            return [
+                "기업 핵심 가치 및 비즈니스 분석",
+                "산업 내 위치 및 경쟁사 분석",
+                "직무 핵심 역할 및 필요 역량 분석",
+                "직무 실무 프로세스 및 커리어 패스",
+                "기업-직무 적합성 종합 진단"
+            ];
+        } else if (type === "요청사항 맞춤 솔루션") {
+            return [
+                "요청사항 핵심 이슈 및 현황 분석",
+                "요청사항 심층 분석 및 실행 가이드",
+                "관련 분야 성공 사례 분석",
+                "예상 리스크 및 대응 매뉴얼",
+                "종합 결론 및 미래 제언"
+            ];
         } else {
             return [
                 "예상질문 & 답변 생성",
@@ -46,19 +62,27 @@ const getInitialTasks = (solutionType: string): TaskProgress[] => {
 
     const labels = getLabels(solutionType);
 
-    return [
-        { id: 'section1', label: `Chapter 1: ${labels[0]}`, state: TaskState.PENDING },
-        { id: 'section2', label: `Chapter 2: ${labels[1]}`, state: TaskState.PENDING },
-        { id: 'section3', label: `Chapter 3: ${labels[2]}`, state: TaskState.PENDING },
-        { id: 'section4', label: `Chapter 4: ${labels[3]}`, state: TaskState.PENDING },
-        { id: 'section5', label: `Chapter 5: ${labels[4]}`, state: TaskState.PENDING },
-        { id: 'cover', label: '프리미엄 커버 이미지 디자인', state: TaskState.PENDING },
-        { id: 'img1', label: 'Chapter 1 인포그래픽 생성', state: TaskState.PENDING },
-        { id: 'img2', label: 'Chapter 2 인포그래픽 생성', state: TaskState.PENDING },
-        { id: 'img3', label: 'Chapter 3 인포그래픽 생성', state: TaskState.PENDING },
-        { id: 'img4', label: 'Chapter 4 인포그래픽 생성', state: TaskState.PENDING },
-        { id: 'img5', label: 'Chapter 5 인포그래픽 생성', state: TaskState.PENDING },
+    const tasks: TaskProgress[] = [
+        { id: 'section1', label: `챕터 1: ${labels[0]}`, state: TaskState.PENDING },
+        { id: 'section2', label: `챕터 2: ${labels[1]}`, state: TaskState.PENDING },
+        { id: 'section3', label: `챕터 3: ${labels[2]}`, state: TaskState.PENDING },
+        { id: 'section4', label: `챕터 4: ${labels[3]}`, state: TaskState.PENDING },
+        { id: 'section5', label: `챕터 5: ${labels[4]}`, state: TaskState.PENDING },
     ];
+
+    if (includeCover) {
+        tasks.push({ id: 'cover', label: '프리미엄 커버 이미지 디자인', state: TaskState.PENDING });
+    }
+
+    if (includeBody) {
+        tasks.push({ id: 'img1', label: '챕터 1 인포그래픽 생성', state: TaskState.PENDING });
+        tasks.push({ id: 'img2', label: '챕터 2 인포그래픽 생성', state: TaskState.PENDING });
+        tasks.push({ id: 'img3', label: '챕터 3 인포그래픽 생성', state: TaskState.PENDING });
+        tasks.push({ id: 'img4', label: '챕터 4 인포그래픽 생성', state: TaskState.PENDING });
+        tasks.push({ id: 'img5', label: '챕터 5 인포그래픽 생성', state: TaskState.PENDING });
+    }
+
+    return tasks;
 };
 
 declare global {
@@ -111,7 +135,7 @@ const App: React.FC = () => {
 
     setUserData(data);
     setStep(ProcessStep.ANALYZING);
-    setTasks(getInitialTasks(data.solutionType));
+    setTasks(getInitialTasks(data.solutionType, data.includeCoverImage, data.includeBodyImages));
 
     try {
       // --- Parallel Generation Phase ---
@@ -167,6 +191,22 @@ const App: React.FC = () => {
                   "취약점 분석 및 보완 가이드",
                   "필기 합격 실전 팁 요약"
               ];
+          } else if (type === "기업&직무분석 솔루션") {
+              return [
+                  "기업 비즈니스 및 핵심 가치",
+                  "산업 트렌드 및 경쟁 우위",
+                  "직무 핵심 역할 및 역량",
+                  "직무 실무 및 커리어 로드맵",
+                  "기업-직무 적합성 시너지"
+              ];
+          } else if (type === "요청사항 맞춤 솔루션") {
+              return [
+                  "요청사항 핵심 이슈 및 현황 분석",
+                  "요청사항 심층 분석 및 실행 가이드",
+                  "관련 분야 성공 사례 분석",
+                  "예상 리스크 및 대응 매뉴얼",
+                  "종합 결론 및 미래 제언"
+              ];
           } else {
               return [
                   "면접 예상 질문 전략 및 핵심 역량",
@@ -190,12 +230,24 @@ const App: React.FC = () => {
           staggerDelay(1000).then(() => runTask('section3', () => generateReportSection(3, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext))),
           staggerDelay(1500).then(() => runTask('section4', () => generateReportSection(4, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext))),
           staggerDelay(2000).then(() => runTask('section5', () => generateReportSection(5, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext))),
-          staggerDelay(2500).then(() => runTask('cover', () => generateCoverImage(data.companyName, data.jobTitle, data.studentName))),
-          staggerDelay(3000).then(() => runTask('img1', () => generateInfographic(topics[0]))),
-          staggerDelay(3500).then(() => runTask('img2', () => generateInfographic(topics[1]))),
-          staggerDelay(4000).then(() => runTask('img3', () => generateInfographic(topics[2]))),
-          staggerDelay(4500).then(() => runTask('img4', () => generateInfographic(topics[3]))),
-          staggerDelay(5000).then(() => runTask('img5', () => generateInfographic(topics[4])))
+          data.includeCoverImage 
+            ? staggerDelay(2500).then(() => runTask('cover', () => generateCoverImage(data.companyName, data.jobTitle, data.studentName, data.solutionType)))
+            : Promise.resolve(undefined),
+          data.includeBodyImages
+            ? staggerDelay(3000).then(() => runTask('img1', () => generateInfographic(topics[0])))
+            : Promise.resolve(undefined),
+          data.includeBodyImages
+            ? staggerDelay(3500).then(() => runTask('img2', () => generateInfographic(topics[1])))
+            : Promise.resolve(undefined),
+          data.includeBodyImages
+            ? staggerDelay(4000).then(() => runTask('img3', () => generateInfographic(topics[2])))
+            : Promise.resolve(undefined),
+          data.includeBodyImages
+            ? staggerDelay(4500).then(() => runTask('img4', () => generateInfographic(topics[3])))
+            : Promise.resolve(undefined),
+          data.includeBodyImages
+            ? staggerDelay(5000).then(() => runTask('img5', () => generateInfographic(topics[4])))
+            : Promise.resolve(undefined)
       ]);
 
       const finalContent = {
@@ -254,8 +306,8 @@ const App: React.FC = () => {
                 </svg>
             </div>
             <div className="flex flex-col">
-                <h1 className="text-xl font-extrabold text-white tracking-tight leading-none">코칭패스 면접 맞춤 솔루션</h1>
-                <span className="text-[10px] font-bold text-amber-500 tracking-[0.2em] uppercase mt-1">Premium Interview Solution</span>
+                <h1 className="text-xl font-extrabold text-white tracking-tight leading-none">코칭패스 맞춤 솔루션</h1>
+                <span className="text-[10px] font-bold text-amber-500 tracking-[0.2em] uppercase mt-1">프리미엄 면접 솔루션</span>
             </div>
           </div>
         </div>
@@ -307,7 +359,7 @@ const App: React.FC = () => {
                 <h3 className="text-3xl font-bold text-white mb-3 text-center">
                     {step === ProcessStep.ANALYZING && "서류 분석 및 데이터 준비 중..."}
                     {(step === ProcessStep.WORKFLOW_1 || step === ProcessStep.WORKFLOW_2 || step === ProcessStep.WORKFLOW_3 || step === ProcessStep.WORKFLOW_4 || step === ProcessStep.WORKFLOW_5 || step === ProcessStep.GENERATING_IMAGES) && "AI가 모든 섹션과 이미지를 통합 생성 중입니다..."}
-                    {step === ProcessStep.CREATING_DOC && "Final: 최종 결과물(Docx) 병합 및 생성 중..."}
+                    {step === ProcessStep.CREATING_DOC && "최종: 최종 결과물(Docx) 병합 및 생성 중..."}
                 </h3>
                 <p className="text-amber-400/80 text-lg">AI가 합격의 열쇠를 만들고 있습니다</p>
                 <p className="text-slate-500 text-sm mt-4">병렬 처리를 통해 생성 속도를 극대화했습니다. 잠시만 기다려주세요.</p>
@@ -377,7 +429,7 @@ const App: React.FC = () => {
       </main>
       
       <footer className="text-center py-10 text-slate-600 text-sm border-t border-white/5">
-        &copy; {new Date().getFullYear()} Coaching Pass. All rights reserved.
+        &copy; {new Date().getFullYear()} 코칭패스. 모든 권리 보유.
       </footer>
     </div>
   );

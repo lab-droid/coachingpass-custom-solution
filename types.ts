@@ -8,6 +8,8 @@ export interface UserInputData {
   referenceLinks: string;
   targetPageCount: string;
   analysisOptions: string;
+  includeCoverImage: boolean;
+  includeBodyImages: boolean;
   resumeFile: File | null;
   coverLetterFile: File | null;
   interviewNoticeFile: File | null;

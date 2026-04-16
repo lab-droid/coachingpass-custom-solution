@@ -157,7 +157,8 @@ const generateImage = async (prompt: string, aspectRatio: string = "16:9"): Prom
 /**
  * Generates the cover image.
  */
-export const generateCoverImage = async (company: string, job: string, name: string) => {
+export const generateCoverImage = async (company: string, job: string, name: string, solutionType: string) => {
+    const nameText = name ? `Applicant Name: ${name}` : "";
     const prompt = `
       Design a premium, luxury book cover for an interview solution report.
       Theme: High-end Black and Gold.
@@ -166,9 +167,10 @@ export const generateCoverImage = async (company: string, job: string, name: str
       - Background: Deep matte black with elegant gold geometric accents or gold dust textures.
       - Logo Area at the top: Display the text "Coaching Pass" in a bold, modern, metallic gold serif font, looking like a premium brand logo.
       - Center Text (Must be legible and sharp):
+        Solution Type: ${solutionType}
         Target Company: ${company}
         Job Title: ${job}
-        Applicant Name: ${name}
+        ${nameText}
       - Footer: A small key icon or a door opening symbol in gold.
       
       Style: Minimalist, Corporate, Expensive, Professional.
@@ -355,6 +357,85 @@ export const generateReportSection = async (
         `;
         break;
     }
+  } else if (solutionType === "기업&직무분석 솔루션") {
+    switch (sectionIndex) {
+      case 1:
+        specificPrompt = `
+          1. 기업 핵심 가치 및 비즈니스 모델 심층 분석
+          - 해당 기업의 설립 배경, 경영 철학, 핵심 가치(Core Values)를 분석하세요.
+          - 현재 주력하고 있는 비즈니스 모델과 수익 구조를 상세히 설명하세요.
+          - [중요] 할루시네이션 방지를 위해 현재 시점의 정확한 정보를 바탕으로 작성하세요.
+        `;
+        break;
+      case 2:
+        specificPrompt = `
+          2. 산업 내 위치 및 경쟁사 비교 분석 (SWOT 포함)
+          - 해당 기업이 속한 산업의 현재 트렌드와 산업 내에서의 시장 점유율 및 위치를 분석하세요.
+          - 주요 경쟁사와의 차별점 및 강점/약점을 비교 분석하세요.
+          - 기업의 SWOT(Strength, Weakness, Opportunity, Threat) 분석을 포함하세요.
+        `;
+        break;
+      case 3:
+        specificPrompt = `
+          3. 직무 핵심 역할 및 필요 역량 심층 분석
+          - 지원 직무의 구체적인 역할과 책임을 정의하세요.
+          - 해당 직무를 수행하기 위해 반드시 필요한 핵심 역량(Hard Skill, Soft Skill)을 도출하세요.
+          - 채용 공고(JD)가 있다면 이를 바탕으로 기업이 선호하는 인재상을 분석하세요.
+        `;
+        break;
+      case 4:
+        specificPrompt = `
+          4. 직무 실무 프로세스 및 커리어 패스 분석
+          - 해당 직무의 일반적인 하루/주간 업무 루틴과 실무 프로세스를 상세히 기술하세요.
+          - 입사 후 연차별 성장 단계와 해당 기업 내에서의 커리어 패스(Career Path)를 제시하세요.
+        `;
+        break;
+      case 5:
+        specificPrompt = `
+          5. 기업-직무 적합성 종합 진단 및 합격 전략
+          - 앞서 분석한 기업의 특성과 직무의 요구사항을 결합하여 지원자가 강조해야 할 'Fit'을 정의하세요.
+          - 기업의 미래 비전과 직무의 발전 방향이 일치하는 지점을 찾아 전략적 제언을 하세요.
+        `;
+        break;
+    }
+  } else if (solutionType === "요청사항 맞춤 솔루션") {
+    switch (sectionIndex) {
+      case 1:
+        specificPrompt = `
+          1. 요청사항 기반 핵심 이슈 및 현황 분석 (Google Deep Research 활용)
+          - 사용자의 요청사항에 기입된 주제와 내용을 바탕으로 최신 트렌드와 정확한 팩트를 분석하세요.
+          - 할루시네이션(허위 정보)을 방지하기 위해 검증된 데이터와 출처를 기반으로 현재 상황을 진단하세요.
+        `;
+        break;
+      case 2:
+        specificPrompt = `
+          2. 요청사항 심층 분석 및 세부 실행 가이드
+          - 요청사항의 핵심 목표를 달성하기 위한 구체적이고 실무적인 실행 방안을 제시하세요.
+          - 단계별 프로세스, 필요 자원, 예상 결과 등을 상세히 기술하세요.
+        `;
+        break;
+      case 3:
+        specificPrompt = `
+          3. 관련 분야 성공 사례 및 벤치마킹 분석
+          - 요청사항과 유사한 성공 사례(국내외 기업, 개인 등)를 구체적으로 분석하여 제시하세요.
+          - 각 사례에서 얻을 수 있는 핵심 인사이트와 적용 포인트를 도출하세요.
+        `;
+        break;
+      case 4:
+        specificPrompt = `
+          4. 예상 리스크 분석 및 위기 대응 매뉴얼
+          - 요청사항 실행 과정에서 발생할 수 있는 잠재적 리스크와 장애 요인을 분석하세요.
+          - 각 리스크별 구체적인 대응 시나리오와 해결책을 제시하세요.
+        `;
+        break;
+      case 5:
+        specificPrompt = `
+          5. 종합 결론 및 미래 지향적 제언
+          - 분석된 내용을 바탕으로 요청사항에 대한 최종 솔루션을 요약하세요.
+          - 지속 가능한 성장을 위한 전문가의 미래 지향적 제언과 핵심 성공 요인(KSF)을 강조하며 마무리하세요.
+        `;
+        break;
+    }
   } else {
     // 기본값: 면접 맞춤 솔루션
     switch (sectionIndex) {
@@ -402,11 +483,12 @@ export const generateReportSection = async (
     }
   }
 
+  const isAiRecommended = targetPageCount === 'AI 추천';
+  const targetPages = isAiRecommended ? 50 : parseInt(targetPageCount);
+  const minPagesPerSection = Math.floor(targetPages / 5);
+  const maxPagesPerSection = Math.ceil(targetPages / 5);
+
   const prompt = `
-    합격의 열쇠 코칭패스
-    당신은 대한민국 상위 1% '코칭패스' 수석 컨설턴트입니다.
-    지원자 '${name}'의 '${company}' '${job}'을(를) 위한 [${solutionType}] 심층 리포트를 작성 중입니다.
-    
     이번 단계에서는 아래 주제에 대해서만 집중적으로 작성합니다.
     
     [사용자 특별 요청사항 (필수 반영 사항 - 이 주제와 내용은 결과물에 무조건 포함되어야 함)]
@@ -439,8 +521,8 @@ export const generateReportSection = async (
 
     4. **가독성**: 설명이 길어지면 두 문장마다 줄바꿈을 하세요.
     5. **전문성**: 냉철하고 분석적인 어조.
-    6. **분량 (필수 준수)**: 전체 리포트 목표 분량은 **${targetPageCount}페이지**입니다. (허용 오차: ±10페이지)
-       - 현재 작성 중인 이 섹션은 전체의 1/5 분량을 담당하므로, **최소 A4 ${Math.floor(parseInt(targetPageCount) / 5)} ~ ${Math.ceil(parseInt(targetPageCount) / 5)}페이지** 분량이 반드시 나와야 합니다.
+    6. **분량 (필수 준수)**: ${isAiRecommended ? '전체 리포트 분량은 AI가 분석 내용의 중요도에 따라 최적의 분량으로 자동 추천하여 작성합니다. (최소 30페이지 이상의 고퀄리티 지향)' : `전체 리포트 목표 분량은 **${targetPageCount}페이지**입니다. (허용 오차: ±10페이지)`}
+       - 현재 작성 중인 이 섹션은 전체의 1/5 분량을 담당하므로, **최소 A4 ${minPagesPerSection} ~ ${maxPagesPerSection}페이지** 분량이 반드시 나와야 합니다.
        - 내용을 극도로 상세하게 풀어서 작성하고, 필요하다면 구체적인 사례, 단계별 가이드, 심층 분석 내용을 추가하여 절대 분량이 부족하지 않도록 하세요.
        - 분량이 부족할 경우 합격 솔루션으로서의 가치가 떨어지므로, 가능한 한 방대하고 깊이 있게 작성하는 것이 핵심입니다.
     7. **표(Table) 사용 필수**: 아래와 같은 구조적 데이터는 반드시 표준 HTML <table> 태그를 사용하여 작성하세요. 마크다운 표(|---|)는 절대 사용하지 마세요.

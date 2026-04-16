@@ -104,12 +104,13 @@ export const downloadAsWord = (content: GeneratedContent, userData: UserInputDat
         <br clear="all" style="page-break-before:always" />
       `;
   } else {
-      // Fallback if image failed
+      // Fallback if image failed or disabled
       coverPage = `
         <div class="CoverPage" style="background:black; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; height:100vh;">
             <h1 style="color:gold; font-size:40pt;">Coaching Pass</h1>
+            <h2 style="color:gold;">${userData.solutionType}</h2>
             <h2>${userData.companyName} - ${userData.jobTitle}</h2>
-            <h3>${userData.studentName}</h3>
+            ${userData.studentName ? `<h3>${userData.studentName}</h3>` : ""}
         </div>
         <br clear="all" style="page-break-before:always" />
       `;
@@ -174,35 +175,51 @@ export const downloadAsWord = (content: GeneratedContent, userData: UserInputDat
   const getChapterTitles = (type: string) => {
       if (type === "진로 맞춤 솔루션") {
           return [
-              "Chapter 1. 직무 적성 및 역량 진단",
-              "Chapter 2. 산업 트렌드 및 유망 직무",
-              "Chapter 3. 커리어 로드맵 설계",
-              "Chapter 4. 역량 강화 로드맵",
-              "Chapter 5. 진로 성공 핵심 전략"
+              "제 1장. 직무 적성 및 역량 진단",
+              "제 2장. 산업 트렌드 및 유망 직무",
+              "제 3장. 커리어 로드맵 설계",
+              "제 4장. 역량 강화 로드맵",
+              "제 5장. 진로 성공 핵심 전략"
           ];
       } else if (type === "서류 맞춤 솔루션") {
           return [
-              "Chapter 1. 자소서 문항 분석 및 의도 파악",
-              "Chapter 2. STAR 기법 기반 스토리텔링",
-              "Chapter 3. 직무 역량 키워드 배치",
-              "Chapter 4. 이력서 시각화 및 구조 개선",
-              "Chapter 5. 서류 합격 최종 보완 전략"
+              "제 1장. 자소서 문항 분석 및 의도 파악",
+              "제 2장. STAR 기법 기반 스토리텔링",
+              "제 3장. 직무 역량 키워드 배치",
+              "제 4장. 이력서 시각화 및 구조 개선",
+              "제 5장. 서류 합격 최종 보완 전략"
           ];
       } else if (type === "필기 맞춤 솔루션") {
           return [
-              "Chapter 1. 필기 전형 유형 및 특징 분석",
-              "Chapter 2. 핵심 개념 및 빈출 테마",
-              "Chapter 3. 문제 풀이 및 시간 관리 스킬",
-              "Chapter 4. 취약점 분석 및 보완 가이드",
-              "Chapter 5. 필기 합격 실전 팁 요약"
+              "제 1장. 필기 전형 유형 및 특징 분석",
+              "제 2장. 핵심 개념 및 빈출 테마",
+              "제 3장. 문제 풀이 및 시간 관리 스킬",
+              "제 4장. 취약점 분석 및 보완 가이드",
+              "제 5장. 필기 합격 실전 팁 요약"
+          ];
+      } else if (type === "기업&직무분석 솔루션") {
+          return [
+              "제 1장. 기업 핵심 가치 및 비즈니스 분석",
+              "제 2장. 산업 내 위치 및 경쟁사 분석",
+              "제 3장. 직무 핵심 역할 및 필요 역량 분석",
+              "제 4장. 직무 실무 프로세스 및 커리어 패스",
+              "제 5장. 기업-직무 적합성 종합 진단"
+          ];
+      } else if (type === "요청사항 맞춤 솔루션") {
+          return [
+              "제 1장. 요청사항 핵심 이슈 및 현황 분석",
+              "제 2장. 요청사항 심층 분석 및 실행 가이드",
+              "제 3장. 관련 분야 성공 사례 분석",
+              "제 4장. 예상 리스크 및 대응 매뉴얼",
+              "제 5장. 종합 결론 및 미래 제언"
           ];
       } else {
           return [
-              "Chapter 1. 서류 기반 예상질문 & 답변",
-              "Chapter 2. 임기응변 전략",
-              "Chapter 3. 면접관의 시선 (Checklist)",
-              "Chapter 4. 고득점 합격 노하우",
-              "Chapter 5. 면접관의 합격 전략 피드백"
+              "제 1장. 서류 기반 예상질문 & 답변",
+              "제 2장. 임기응변 전략",
+              "제 3장. 면접관의 시선 (Checklist)",
+              "제 4장. 고득점 합격 노하우",
+              "제 5장. 면접관의 합격 전략 피드백"
           ];
       }
   };
@@ -228,7 +245,8 @@ export const downloadAsWord = (content: GeneratedContent, userData: UserInputDat
       <div class="footer-notice">
          <p>본 솔루션은 코칭패스 자체 AI를 활용해서 코칭패스의 코치진과 컨설턴트가 함께 제작한 솔루션입니다.</p>
          <p>사용된 모든 개인정보 및 서류 데이터는 솔루션 생성 즉시 시스템에서 영구 파기되었습니다.</p>
-         <p>Copyright © Coaching Pass. All rights reserved.</p>
+         <p>해당 솔루션의 모든 저작권은 합격의 열쇠 코칭패스에 있으며, 외부 유포를 금합니다.</p>
+         <p>Copyright © 코칭패스. 모든 권리 보유.</p>
       </div>
     </div>
   `;
