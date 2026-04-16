@@ -2,7 +2,7 @@ import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import mammoth from "mammoth";
 
 // Initialize Gemini Client
-const getAiClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
+const getAiClient = () => new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const SUPPORTED_MIME_TYPES = [
   'application/pdf',
