@@ -25,6 +25,10 @@ export const downloadAsWord = (content: GeneratedContent, userData: UserInputDat
             page: CoverPage;
             width: 100%;
             height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
         }
         
         body { font-family: 'Malgun Gothic', 'Dotum', sans-serif; line-height: 1.6; color: #000; }
@@ -106,11 +110,12 @@ export const downloadAsWord = (content: GeneratedContent, userData: UserInputDat
   } else {
       // Fallback if image failed or disabled
       coverPage = `
-        <div class="CoverPage" style="background:black; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; height:100vh;">
-            <h1 style="color:gold; font-size:40pt;">Coaching Pass</h1>
-            <h2 style="color:gold;">${userData.solutionType}</h2>
-            <h2>${userData.companyName} - ${userData.jobTitle}</h2>
-            ${userData.studentName ? `<h3>${userData.studentName}</h3>` : ""}
+        <div class="CoverPage" style="background:black; color:white;">
+            <div style="width:100%;">
+                <h1 style="color:gold; font-size:36pt; margin-bottom:10px;">${userData.solutionType}</h1>
+                <h2 style="color:white; font-size:24pt; margin-bottom:10px;">${userData.companyName}, ${userData.jobTitle}</h2>
+                ${userData.studentName ? `<h3 style="color:gold; font-size:20pt;">${userData.studentName}</h3>` : ""}
+            </div>
         </div>
         <br clear="all" style="page-break-before:always" />
       `;
@@ -213,6 +218,30 @@ export const downloadAsWord = (content: GeneratedContent, userData: UserInputDat
               "제 4장. 예상 리스크 및 대응 매뉴얼",
               "제 5장. 종합 결론 및 미래 제언"
           ];
+      } else if (type === "기출 맞춤 솔루션") {
+          return [
+              "제 1장. 면접 유형별 특징 및 대비 전략",
+              "제 2장. 빈출 핵심 기출 20선 (Part 1)",
+              "제 3장. 빈출 핵심 기출 20선 (Part 2)",
+              "제 4장. 기출 활용 노하우 및 실전 훈련법",
+              "제 5장. 기출 기반 최종 합격 전략"
+          ];
+      } else if (type === "보강 솔루션") {
+          return [
+              "제 1장. 기존 솔루션 핵심 분석 및 취약점 도출",
+              "제 2장. 요청사항 기반 정밀 보강 전략 수립",
+              "제 3장. 콘텐츠 심층 강화 및 내용 확장",
+              "제 4장. 실전 활용도 및 퀄리티 업그레이드",
+              "제 5장. 보강 완료 및 최종 합격 로드맵"
+          ];
+      } else if (type === "맞춤 솔루션") {
+          return [
+              "제 1장. 맞춤솔루션 제작 1",
+              "제 2장. 맞춤솔루션 제작 2",
+              "제 3장. 맞춤솔루션 제작 3",
+              "제 4장. 맞춤솔루션 제작 4",
+              "제 5장. 맞춤솔루션 제작 5"
+          ];
       } else {
           return [
               "제 1장. 서류 기반 예상질문 & 답변",
@@ -243,7 +272,7 @@ export const downloadAsWord = (content: GeneratedContent, userData: UserInputDat
       ${getSectionHTML(chapters[4], content.section5, content.section5Image)}
       
       <div class="footer-notice">
-         <p>본 솔루션은 코칭패스 자체 AI를 활용해서 코칭패스의 코치진과 컨설턴트가 함께 제작한 솔루션입니다.</p>
+         <p>본 솔루션은 코칭패스의 전문성 있는 코치진과 컨설턴트가 함께 제작한 프리미엄 합격 솔루션입니다.</p>
          <p>사용된 모든 개인정보 및 서류 데이터는 솔루션 생성 즉시 시스템에서 영구 파기되었습니다.</p>
          <p>해당 솔루션의 모든 저작권은 합격의 열쇠 코칭패스에 있으며, 외부 유포를 금합니다.</p>
          <p>Copyright © 코칭패스. 모든 권리 보유.</p>

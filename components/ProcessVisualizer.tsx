@@ -3,19 +3,33 @@ import { ProcessStep } from '../types';
 
 interface ProcessVisualizerProps {
   currentStep: ProcessStep;
+  solutionType?: string;
 }
 
-const steps = [
-  { id: ProcessStep.WORKFLOW_1, label: '예상 질문', icon: '1' },
-  { id: ProcessStep.WORKFLOW_2, label: '돌발 전략', icon: '2' },
-  { id: ProcessStep.WORKFLOW_3, label: '약점 분석', icon: '3' },
-  { id: ProcessStep.WORKFLOW_4, label: '합격 노하우', icon: '4' },
-  { id: ProcessStep.WORKFLOW_5, label: '전략 피드백', icon: '5' },
-  { id: ProcessStep.GENERATING_IMAGES, label: '이미지 생성', icon: '🎨' },
-  { id: ProcessStep.CREATING_DOC, label: '최종 결과물', icon: '📄' },
-];
+const getSteps = (solutionType?: string) => {
+  if (solutionType === '맞춤 솔루션') {
+    return [
+      { id: ProcessStep.WORKFLOW_1, label: '맞춤솔루션 1', icon: '1' },
+      { id: ProcessStep.WORKFLOW_2, label: '맞춤솔루션 2', icon: '2' },
+      { id: ProcessStep.WORKFLOW_3, label: '맞춤솔루션 3', icon: '3' },
+      { id: ProcessStep.WORKFLOW_4, label: '맞춤솔루션 4', icon: '4' },
+      { id: ProcessStep.WORKFLOW_5, label: '맞춤솔루션 5', icon: '5' },
+      { id: ProcessStep.GENERATING_IMAGES, label: '이미지 생성', icon: '🎨' },
+      { id: ProcessStep.CREATING_DOC, label: '최종 결과물', icon: '📄' },
+    ];
+  }
+  return [
+    { id: ProcessStep.WORKFLOW_1, label: '예상 질문', icon: '1' },
+    { id: ProcessStep.WORKFLOW_2, label: '돌발 전략', icon: '2' },
+    { id: ProcessStep.WORKFLOW_3, label: '약점 분석', icon: '3' },
+    { id: ProcessStep.WORKFLOW_4, label: '합격 노하우', icon: '4' },
+    { id: ProcessStep.WORKFLOW_5, label: '전략 피드백', icon: '5' },
+    { id: ProcessStep.GENERATING_IMAGES, label: '이미지 생성', icon: '🎨' },
+    { id: ProcessStep.CREATING_DOC, label: '최종 결과물', icon: '📄' },
+  ];
+};
 
-export const ProcessVisualizer: React.FC<ProcessVisualizerProps> = ({ currentStep }) => {
+export const ProcessVisualizer: React.FC<ProcessVisualizerProps> = ({ currentStep, solutionType }) => {
   const stepOrder = [
       ProcessStep.IDLE, 
       ProcessStep.ANALYZING, 
@@ -56,12 +70,12 @@ export const ProcessVisualizer: React.FC<ProcessVisualizerProps> = ({ currentSte
       <div className="flex items-center justify-between relative">
         {/* Connector Lines */}
         <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 -z-10 flex px-10">
-           {steps.slice(0, -1).map((_, idx) => (
+           {getSteps(solutionType).slice(0, -1).map((_, idx) => (
              <div key={`line-${idx}`} className={`flex-1 h-0.5 mx-2 transition-colors duration-500 ${getBarColor(idx)} rounded`}></div>
            ))}
         </div>
 
-        {steps.map((step, idx) => (
+        {getSteps(solutionType).map((step, idx) => (
           <div key={step.id} className="flex flex-col items-center px-2 relative min-w-[80px]">
             <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center text-xl transition-all duration-300 bg-[#0a0a0a] z-10 ${
               getStepStatus(step.id, idx).includes('amber') ? 'border-amber-500 text-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.4)] scale-110' : 'border-slate-700 text-slate-700'

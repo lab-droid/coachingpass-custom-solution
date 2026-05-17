@@ -49,6 +49,30 @@ const getInitialTasks = (solutionType: string, includeCover: boolean, includeBod
                 "예상 리스크 및 대응 매뉴얼",
                 "종합 결론 및 미래 제언"
             ];
+        } else if (type === "기출 맞춤 솔루션") {
+            return [
+                "면접 유형별 특징 및 대비 전략",
+                "빈출 핵심 기출 20선 (Part 1)",
+                "빈출 핵심 기출 20선 (Part 2)",
+                "기출 활용 노하우 및 실전 훈련법",
+                "기출 기반 최종 합격 전략"
+            ];
+        } else if (type === "보강 솔루션") {
+            return [
+                "기존 솔루션 핵심 분석 및 취약점 도출",
+                "요청사항 기반 정밀 보강 전략 수립",
+                "콘텐츠 심층 강화 및 내용 확장",
+                "실전 활용도 및 퀄리티 업그레이드",
+                "보강 완료 및 최종 합격 로드맵"
+            ];
+        } else if (type === "맞춤 솔루션") {
+            return [
+                "맞춤솔루션 제작 1",
+                "맞춤솔루션 제작 2",
+                "맞춤솔루션 제작 3",
+                "맞춤솔루션 제작 4",
+                "맞춤솔루션 제작 5"
+            ];
         } else {
             return [
                 "예상질문 & 답변 생성",
@@ -124,6 +148,15 @@ const App: React.FC = () => {
       await window.aistudio.openSelectKey();
       await checkApiKey();
     }
+  };
+
+  const handleRestart = () => {
+    setStep(ProcessStep.IDLE);
+    setTasks([]);
+    setContent({
+        section1: '', section2: '', section3: '', section4: '', section5: ''
+    });
+    setUserData(null);
   };
 
   const handleStartAnalysis = async (data: UserInputData) => {
@@ -207,6 +240,30 @@ const App: React.FC = () => {
                   "예상 리스크 및 대응 매뉴얼",
                   "종합 결론 및 미래 제언"
               ];
+          } else if (type === "기출 맞춤 솔루션") {
+              return [
+                  "면접 유형별 특징 및 대비 전략",
+                  "빈출 핵심 기출 분석 (1단계)",
+                  "심층 핵심 기출 분석 (2단계)",
+                  "기출 활용 노하우 및 훈련 가이드",
+                  "기출 기반 필승 합격 전략"
+              ];
+          } else if (type === "보강 솔루션") {
+              return [
+                  "기존 항목 정밀 분석 및 진단",
+                  "추가 요구사항 반영 전략",
+                  "핵심 콘텐츠 심층 보완",
+                  "실전 적용 퀄리티 강화",
+                  "최종 합격 솔루션 완성"
+              ];
+          } else if (type === "맞춤 솔루션") {
+              return [
+                  "맞춤솔루션 제작 1",
+                  "맞춤솔루션 제작 2",
+                  "맞춤솔루션 제작 3",
+                  "맞춤솔루션 제작 4",
+                  "맞춤솔루션 제작 5"
+              ];
           } else {
               return [
                   "면접 예상 질문 전략 및 핵심 역량",
@@ -225,11 +282,11 @@ const App: React.FC = () => {
           coverImage,
           img1, img2, img3, img4, img5
       ] = await Promise.all([
-          runTask('section1', () => generateReportSection(1, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext)),
-          staggerDelay(500).then(() => runTask('section2', () => generateReportSection(2, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext))),
-          staggerDelay(1000).then(() => runTask('section3', () => generateReportSection(3, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext))),
-          staggerDelay(1500).then(() => runTask('section4', () => generateReportSection(4, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext))),
-          staggerDelay(2000).then(() => runTask('section5', () => generateReportSection(5, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext))),
+          runTask('section1', () => generateReportSection(1, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext)),
+          staggerDelay(500).then(() => runTask('section2', () => generateReportSection(2, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext))),
+          staggerDelay(1000).then(() => runTask('section3', () => generateReportSection(3, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext))),
+          staggerDelay(1500).then(() => runTask('section4', () => generateReportSection(4, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext))),
+          staggerDelay(2000).then(() => runTask('section5', () => generateReportSection(5, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext))),
           data.includeCoverImage 
             ? staggerDelay(2500).then(() => runTask('cover', () => generateCoverImage(data.companyName, data.jobTitle, data.studentName, data.solutionType)))
             : Promise.resolve(undefined),
@@ -334,7 +391,7 @@ const App: React.FC = () => {
 
         {/* Stepper */}
         <div className={`transition-all duration-700 ease-in-out transform ${step === ProcessStep.IDLE ? 'mb-12 translate-y-0 opacity-100' : 'mb-20 translate-y-0 opacity-100'}`}>
-          <ProcessVisualizer currentStep={step} />
+          <ProcessVisualizer currentStep={step} solutionType={userData?.solutionType} />
         </div>
 
         {/* Input Form */}
@@ -418,12 +475,20 @@ const App: React.FC = () => {
                 {userData?.studentName}님의 면접 솔루션이 자동으로 다운로드 됩니다.<br/>
                 다운로드가 시작되지 않으면 아래 버튼을 클릭하세요.
              </p>
-             <button 
-                onClick={() => downloadAsWord(content, userData!)}
-                className="px-8 py-4 bg-amber-600 hover:bg-amber-500 rounded-xl text-white font-bold transition-colors"
-             >
-                수동으로 다운로드 (.doc)
-             </button>
+             <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+                <button 
+                    onClick={() => downloadAsWord(content, userData!)}
+                    className="w-full md:w-auto px-8 py-4 bg-amber-600 hover:bg-amber-500 rounded-xl text-white font-bold transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-amber-600/20"
+                >
+                    솔루션 다운로드 (.doc)
+                </button>
+                <button 
+                    onClick={handleRestart}
+                    className="w-full md:w-auto px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-white font-bold transition-all transform hover:scale-105 active:scale-95"
+                >
+                    다시 시작하기
+                </button>
+             </div>
           </div>
         )}
       </main>

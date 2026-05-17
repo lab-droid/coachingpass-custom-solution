@@ -5,17 +5,18 @@ export interface UserInputData {
   interviewType: string;
   studentName: string;
   requirements: string;
+  forbiddenContent: string;
   referenceLinks: string;
   targetPageCount: string;
   analysisOptions: string;
   includeCoverImage: boolean;
   includeBodyImages: boolean;
-  resumeFile: File | null;
-  coverLetterFile: File | null;
-  interviewNoticeFile: File | null;
-  jobPostingFile: File | null;
-  preTaskFile: File | null;
-  ptMaterialFile: File | null;
+  resumeFile: File[];
+  coverLetterFile: File[];
+  interviewNoticeFile: File[];
+  jobPostingFile: File[];
+  preTaskFile: File[];
+  ptMaterialFile: File[];
   otherFiles: File[];
 }
 
