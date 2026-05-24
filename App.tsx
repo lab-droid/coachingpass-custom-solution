@@ -73,6 +73,14 @@ const getInitialTasks = (solutionType: string, includeCover: boolean, includeBod
                 "맞춤솔루션 제작 4",
                 "맞춤솔루션 제작 5"
             ];
+        } else if (type === "PT면접 기출") {
+            return [
+                "PT면접 핵심 기출 및 인사이트 분석",
+                "데이터 기반 산업/기업 분석 및 시사점",
+                "핵심 문제 해결 및 논리 구조화 전략",
+                "예상 질문 방어 및 발표 스킬업",
+                "최종 합격 발표 시뮬레이션"
+            ];
         } else {
             return [
                 "예상질문 & 답변 생성",

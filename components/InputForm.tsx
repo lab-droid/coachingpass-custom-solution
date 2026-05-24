@@ -210,6 +210,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isProcessing }) 
                     <option value="기업&직무분석 솔루션" className="bg-[#1a1a1a] text-white">기업&직무분석 솔루션</option>
                     <option value="요청사항 맞춤 솔루션" className="bg-[#1a1a1a] text-white">요청사항 맞춤 솔루션</option>
                     <option value="맞춤 솔루션" className="bg-[#1a1a1a] text-white">맞춤 솔루션</option>
+                    <option value="PT면접 기출" className="bg-[#1a1a1a] text-white">PT면접 기출</option>
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-amber-500">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>

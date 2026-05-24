@@ -242,6 +242,14 @@ export const downloadAsWord = (content: GeneratedContent, userData: UserInputDat
               "제 4장. 맞춤솔루션 제작 4",
               "제 5장. 맞춤솔루션 제작 5"
           ];
+      } else if (type === "PT면접 기출") {
+          return [
+              "제 1장. PT면접 핵심 기출 및 데이터 분석",
+              "제 2장. 논리적 문제 해결 및 전략 수립",
+              "제 3장. 발표 자료 구성 및 시각화 가이드",
+              "제 4장. 예상 Q&A 및 압박 방어 로직",
+              "제 5장. 최종 실전 시뮬레이션"
+          ];
       } else {
           return [
               "제 1장. 서류 기반 예상질문 & 답변",
