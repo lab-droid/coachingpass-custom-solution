@@ -128,11 +128,11 @@ const withRetry = async <T>(task: () => Promise<T>, maxRetries: number = 10): Pr
 /**
  * Generates an image using Gemini.
  */
-const generateImage = async (prompt: string, aspectRatio: string = "16:9", model: string = "gemini-3.1-flash-image-preview"): Promise<string | undefined> => {
+const generateImage = async (prompt: string, aspectRatio: string = "16:9"): Promise<string | undefined> => {
     const ai = getAiClient();
     return withRetry(async () => {
         const response = await ai.models.generateContent({
-            model: model,
+            model: 'gemini-3.1-flash-image-preview',
             contents: { parts: [{ text: prompt }] },
             config: {
                 imageConfig: {
@@ -182,7 +182,7 @@ export const generateCoverImage = async (company: string, job: string, name: str
       Style: Executive, Sophisticated, High-end, Professional.
     `;
     // 9:16 aspect ratio is the closest standard for 1600x2560
-    return await generateImage(prompt, "9:16", "gemini-3-pro-image-preview");
+    return await generateImage(prompt, "9:16");
 };
 
 /**
@@ -201,7 +201,7 @@ export const generateInfographic = async (topic: string) => {
       5. **Ratio**: 16:9 Wide.
       6. **Composition**: Ensure all elements are within the 16:9 frame and not clipped at the edges.
     `;
-    return await generateImage(prompt, "16:9", "gemini-3-pro-image-preview");
+    return await generateImage(prompt, "16:9");
 };
 
 /**
@@ -520,47 +520,6 @@ export const generateReportSection = async (
         `;
         break;
     }
-  } else if (solutionType === "PT면접 기출") {
-    switch (sectionIndex) {
-      case 1:
-        specificPrompt = `
-          1. PT면접 핵심 기출 및 데이터 분석
-          - 해당 기업(${company}) 및 직무(${job})에서 자주 출제되거나 예상되는 PT면접 기출 문제(또는 유사 주제)를 명확히 정의하세요.
-          - 해당 기출문제의 출제 의도와 배경(산업 동향, 기업 이슈 등)을 상세히 분석하세요.
-          - 논리를 뒷받침할 수 있는 핵심 데이터와 통계 수치를 제공하세요.
-        `;
-        break;
-      case 2:
-        specificPrompt = `
-          2. 논리적 문제 해결 및 전략 수립
-          - 기출 문제에 대한 구체적이고 현실적인 해결책을 '현황 분석 - 원인 도출 - 해결 방안 - 기대 효과' 기반의 구조로 작성하세요.
-          - 제안하는 전략이 타 지원자와 차별화될 수 있는 핵심 경쟁력을 논리적으로 설명하세요.
-        `;
-        break;
-      case 3:
-        specificPrompt = `
-          3. 발표 자료 구성 및 시각화 가이드
-          - PT 슬라이드 장표별(도입-전개-결론) 구성 전략과 키 메시지를 스크립트로 작성하세요.
-          - (필수 포함) 텍스트로만 설명하지 말고, 데이터나 논리를 뒷받침하는 핵심 그래프나 표본 데이터를 어떻게 시각화할지 명확한 텍스트 가이드와 모의 데이터를 제시하세요.
-          - (예시그래프) 본문 중간에 반드시 마크다운 표(Table) 구문 또는 텍스트 기반 다이어그램 등을 활용하여 시각적 데이터를 풍부하게 포함하세요.
-        `;
-        break;
-      case 4:
-        specificPrompt = `
-          4. 예상 Q&A 및 압박 방어 로직
-          - 발표 후 이어질 수 있는 면접관의 예리한 질문과 압박 질문 리스트 10개를 선별하세요.
-          - 각 질문에 대해 논리적 허점을 방어하고, 논리를 강화할 수 있는 모범 답변 스크립트를 작성하세요.
-        `;
-        break;
-      case 5:
-        specificPrompt = `
-          5. 최종 실전 시뮬레이션
-          - 입장부터 발표, Q&A, 퇴장까지의 완벽한 실전 시뮬레이션 스크립트를 구성하세요.
-          - 발표 시나리오에 맞는 비언어적 태도(자세, 시선 등)와 시간 관리 스킬을 코칭하세요.
-          - 전문 컨설턴트로서의 격려로 마무리하세요.
-        `;
-        break;
-    }
   } else if (solutionType === "맞춤 솔루션") {
     switch (sectionIndex) {
       case 1:
@@ -668,13 +627,6 @@ export const generateReportSection = async (
     - 첨부된 파일(이력서, 자소서 등)에 다른 기업명이 적혀 있더라도, 해당 기업은 무시하고 오직 '${company}' 기업에 대한 솔루션을 생성해야 합니다.
     - 지원자의 경험 데이터는 첨부파일에서 추출하되, 기업 및 직무 관련 분석 내용은 반드시 '${company}'와 '${job}'에 100% 맞춰야 합니다.
 
-    [휴먼라이팅(Human-Writing) 및 AI 느낌 제거 필수 지침]
-    - 과도하고 기계적인 병렬식 나열('첫째, 둘째, 셋째...' 또는 너무 잦은 불릿 포인트 사용)을 피하고 자연스러운 산문체(줄글)를 섞어서 전문가가 직접 말하듯 작성하십시오.
-    - AI 특유의 영혼 없고 뻔한 형용사('포괄적인', '혁신적인', '심도 있는', '다각적인', '통찰력 있는', '다양한', '풍부한') 사용을 엄격히 금지합니다.
-    - 기계적인 전환 어구('결론적으로', '요약하자면', '앞서 살펴보았듯이', '궁극적으로') 및 상투적인 맺음말('~하시길 바랍니다', '~에 도움이 될 것입니다', '~를 기원합니다')을 절대 사용하지 마십시오. 컨설턴트 특유의 담백하고 단호하며 실용적인 어조를 유지하십시오.
-    - 너무 교과서적이고 원론적인 답변보다는, 실제 현업 실무진이 사용할 법한 현실적이고 날카로운 단어와 생생한 표현을 활용하십시오.
-    - 마크다운의 **볼드체**를 문장 중간에 너무 자주, 기계적으로 남발하지 마십시오. 강조가 꼭 필요한 핵심 키워드에만 제한적으로 사용하십시오.
-
     이번 단계에서는 아래 주제에 대해서만 집중적으로 작성합니다.
     
     [사용자 특별 요청사항 (필수 반영 사항)]
@@ -741,7 +693,6 @@ export const generateReportSection = async (
               첨부파일(자소서, 이력서 등)에서 지원자의 경험과 강점을 추출하되, 기업 데이터베이스와 분석 내용은 반드시 사용자가 입력한 '${company}' 기업에 한정되어야 합니다.
               절대로 다른 기업이나 유사 기업의 정보를 섞지 마세요.
               모든 답변은 전문적이고 신뢰할 수 있는 정보를 바탕으로, 할루시네이션(허위 정보) 없이 작성되어야 합니다.
-              절대 AI 특유의 장황한 수식어('혁신적인', '포괄적인' 등), 기계적인 병렬 구조, 영혼 없는 결론 맺음말을 사용하지 마십시오. 자연스럽고 실용적인 줄글을 사용하십시오.
             `
           }]
         }

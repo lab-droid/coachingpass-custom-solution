@@ -73,14 +73,6 @@ const getInitialTasks = (solutionType: string, includeCover: boolean, includeBod
                 "맞춤솔루션 제작 4",
                 "맞춤솔루션 제작 5"
             ];
-        } else if (type === "PT면접 기출") {
-            return [
-                "PT면접 핵심 기출 및 인사이트 분석",
-                "데이터 기반 산업/기업 분석 및 시사점",
-                "핵심 문제 해결 및 논리 구조화 전략",
-                "예상 질문 방어 및 발표 스킬업",
-                "최종 합격 발표 시뮬레이션"
-            ];
         } else {
             return [
                 "예상질문 & 답변 생성",
@@ -179,7 +171,7 @@ const App: React.FC = () => {
     setTasks(getInitialTasks(data.solutionType, data.includeCoverImage, data.includeBodyImages));
 
     try {
-      // --- Parallel Generation Phase ---
+      // Parallel generation phase
       setStep(ProcessStep.WORKFLOW_1); // Start with first step visually
       
       const fileContext = {
@@ -191,9 +183,6 @@ const App: React.FC = () => {
           ptMaterial: data.ptMaterialFile,
           otherFiles: data.otherFiles
       };
-
-      // Staggered parallelization to avoid burst limits
-      const staggerDelay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
       const runTask = async (id: string, fn: () => Promise<any>) => {
           updateTask(id, TaskState.PROCESSING);
@@ -291,27 +280,27 @@ const App: React.FC = () => {
           img1, img2, img3, img4, img5
       ] = await Promise.all([
           runTask('section1', () => generateReportSection(1, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext)),
-          staggerDelay(500).then(() => runTask('section2', () => generateReportSection(2, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext))),
-          staggerDelay(1000).then(() => runTask('section3', () => generateReportSection(3, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext))),
-          staggerDelay(1500).then(() => runTask('section4', () => generateReportSection(4, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext))),
-          staggerDelay(2000).then(() => runTask('section5', () => generateReportSection(5, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext))),
+          runTask('section2', () => generateReportSection(2, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext)),
+          runTask('section3', () => generateReportSection(3, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext)),
+          runTask('section4', () => generateReportSection(4, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext)),
+          runTask('section5', () => generateReportSection(5, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext)),
           data.includeCoverImage 
-            ? staggerDelay(2500).then(() => runTask('cover', () => generateCoverImage(data.companyName, data.jobTitle, data.studentName, data.solutionType)))
+            ? runTask('cover', () => generateCoverImage(data.companyName, data.jobTitle, data.studentName, data.solutionType))
             : Promise.resolve(undefined),
           data.includeBodyImages
-            ? staggerDelay(3000).then(() => runTask('img1', () => generateInfographic(topics[0])))
+            ? runTask('img1', () => generateInfographic(topics[0]))
             : Promise.resolve(undefined),
           data.includeBodyImages
-            ? staggerDelay(3500).then(() => runTask('img2', () => generateInfographic(topics[1])))
+            ? runTask('img2', () => generateInfographic(topics[1]))
             : Promise.resolve(undefined),
           data.includeBodyImages
-            ? staggerDelay(4000).then(() => runTask('img3', () => generateInfographic(topics[2])))
+            ? runTask('img3', () => generateInfographic(topics[2]))
             : Promise.resolve(undefined),
           data.includeBodyImages
-            ? staggerDelay(4500).then(() => runTask('img4', () => generateInfographic(topics[3])))
+            ? runTask('img4', () => generateInfographic(topics[3]))
             : Promise.resolve(undefined),
           data.includeBodyImages
-            ? staggerDelay(5000).then(() => runTask('img5', () => generateInfographic(topics[4])))
+            ? runTask('img5', () => generateInfographic(topics[4]))
             : Promise.resolve(undefined)
       ]);
 
@@ -331,14 +320,14 @@ const App: React.FC = () => {
       setStep(ProcessStep.CREATING_DOC);
       
       // Slight delay to allow visualizer to update before download triggers
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       // Completion & Auto Download
       setStep(ProcessStep.COMPLETED);
       
       setTimeout(() => {
           downloadAsWord(finalContent, data);
-      }, 500);
+      }, 100);
 
     } catch (error: any) {
       console.error(error);
