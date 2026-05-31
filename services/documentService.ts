@@ -1,5 +1,206 @@
 import { GeneratedContent, UserInputData } from "../types";
 
+export const copyToGoogleDocs = async (content: GeneratedContent, userData: UserInputData) => {
+    // Generate HTML for clipboard
+    const getChapterTitles = (type: string) => {
+      if (type === "진로 맞춤 솔루션") {
+          return [
+              "제 1장. 직무 적성 및 역량 진단",
+              "제 2장. 산업 트렌드 및 유망 직무",
+              "제 3장. 커리어 로드맵 설계",
+              "제 4장. 역량 강화 로드맵",
+              "제 5장. 진로 성공 핵심 전략"
+          ];
+      } else if (type === "서류 맞춤 솔루션") {
+          return [
+              "제 1장. 자소서 문항 분석 및 의도 파악",
+              "제 2장. STAR 기법 기반 스토리텔링",
+              "제 3장. 직무 역량 키워드 배치",
+              "제 4장. 이력서 시각화 및 구조 개선",
+              "제 5장. 서류 합격 최종 보완 전략"
+          ];
+      } else if (type === "필기 맞춤 솔루션") {
+          return [
+              "제 1장. 필기 전형 유형 및 특징 분석",
+              "제 2장. 핵심 개념 및 빈출 테마",
+              "제 3장. 문제 풀이 및 시간 관리 스킬",
+              "제 4장. 취약점 분석 및 보완 가이드",
+              "제 5장. 필기 합격 실전 팁 요약"
+          ];
+      } else if (type === "기업&직무분석 솔루션") {
+          return [
+              "제 1장. 기업 핵심 가치 및 비즈니스 분석",
+              "제 2장. 산업 내 위치 및 경쟁사 분석",
+              "제 3장. 직무 핵심 역할 및 필요 역량 분석",
+              "제 4장. 직무 실무 프로세스 및 커리어 패스",
+              "제 5장. 기업-직무 적합성 종합 진단"
+          ];
+      } else if (type === "요청사항 맞춤 솔루션") {
+          return [
+              "제 1장. 요청사항 핵심 이슈 및 현황 분석",
+              "제 2장. 요청사항 심층 분석 및 실행 가이드",
+              "제 3장. 관련 분야 성공 사례 분석",
+              "제 4장. 예상 리스크 및 대응 매뉴얼",
+              "제 5장. 종합 결론 및 미래 제언"
+          ];
+      } else if (type === "기출 맞춤 솔루션") {
+          return [
+              "제 1장. 면접 유형별 특징 및 대비 전략",
+              "제 2장. 빈출 핵심 기출 20선 (Part 1)",
+              "제 3장. 빈출 핵심 기출 20선 (Part 2)",
+              "제 4장. 기출 활용 노하우 및 실전 훈련법",
+              "제 5장. 기출 기반 최종 합격 전략"
+          ];
+      } else if (type === "보강 솔루션") {
+          return [
+              "제 1장. 기존 솔루션 핵심 분석 및 취약점 도출",
+              "제 2장. 요청사항 기반 정밀 보강 전략 수립",
+              "제 3장. 콘텐츠 심층 강화 및 내용 확장",
+              "제 4장. 실전 활용도 및 퀄리티 업그레이드",
+              "제 5장. 보강 완료 및 최종 합격 로드맵"
+          ];
+      } else if (type === "맞춤 솔루션") {
+          return [
+              "제 1장. 맞춤솔루션 제작 1",
+              "제 2장. 맞춤솔루션 제작 2",
+              "제 3장. 맞춤솔루션 제작 3",
+              "제 4장. 맞춤솔루션 제작 4",
+              "제 5장. 맞춤솔루션 제작 5"
+          ];
+      } else {
+          return [
+              "제 1장. 서류 기반 예상질문 & 답변",
+              "제 2장. 임기응변 전략",
+              "제 3장. 면접관의 시선 (Checklist)",
+              "제 4장. 고득점 합격 노하우",
+              "제 5장. 면접관의 합격 전략 피드백"
+          ];
+      }
+    };
+    
+    // Parse text to apply styles
+    const formatText = (text: string) => {
+        const parts = text.split(/(<table[\s\S]*?<\/table>)/gi);
+        return parts.map(part => {
+            if (part.toLowerCase().startsWith('<table')) {
+                return part
+                    .replace(/style="[^"]*"/gi, '') // reset preset styles
+                    .replace(/<table/gi, '<table border="1" cellpadding="8" style="width:100%; border-collapse:collapse; margin:24px 0; border:1px solid #e5e7eb;"')
+                    .replace(/<th/gi, '<th style="border:1px solid #e5e7eb; padding:12px; background-color:#f9fafb; font-weight:700; font-size:10pt; color: #374151;"')
+                    .replace(/<td/gi, '<td style="border:1px solid #e5e7eb; padding:12px; font-size:9.5pt; line-height:1.6; color: #4b5563;"')
+                    .replace(/###/g, '')
+                    .replace(/!!/g, '')
+                    .replace(/\*\*/g, '')
+                    .replace(/---/g, '');
+            }
+            let cleanedText = part
+                .replace(/^- /gm, '• ')
+                .replace(/^\* /gm, '• ')
+                .replace(/###/g, '')
+                .replace(/!!/g, '')
+                .replace(/\*\*/g, '')
+                .replace(/#/g, '')
+                .replace(/---/g, '')
+                .replace(/__/g, '')
+                .replace(/\*/g, '')
+                .replace(/`/g, '');
+            return cleanedText.split('\n').map(line => {
+                let processedLine = line.trim();
+                if (!processedLine) return ''; 
+                if (processedLine.startsWith('<h3>') && processedLine.endsWith('</h3>')) {
+                    return processedLine;
+                }
+                return `<p style="margin-bottom: 10px; font-size: 11pt; text-align: justify; line-height: 1.6;">${processedLine}</p>`;
+            }).join('');
+        }).join('');
+    };
+
+    const getSectionHTML = (title: string, text: string, imageBase64?: string) => {
+        let imgHTML = '';
+        if (imageBase64) {
+            const imgSrc = imageBase64.startsWith('data:') ? imageBase64 : `data:image/png;base64,${imageBase64}`;
+            imgHTML = `<img src="${imgSrc}" style="width: 100%; max-width: 6.5in; height: auto; margin-bottom: 20px; border: 1px solid #ddd;" alt="${title} Infographic" />`;
+        }
+        return `
+          <h1 style="font-size: 20pt; font-weight: bold; color: #d4af37; border-bottom: 2px solid #000; padding-bottom: 10px; margin-top: 40px; margin-bottom: 20px; page-break-after: avoid;">${title}</h1>
+          ${imgHTML}
+          ${formatText(text)}
+        `;
+    };
+
+    const chapters = getChapterTitles(userData.solutionType);
+    
+    let coverHTML = '';
+    if (content.coverImage) {
+        const coverSrc = content.coverImage.startsWith('data:') ? content.coverImage : `data:image/png;base64,${content.coverImage}`;
+        coverHTML = `<div style="page-break-after: always;"><img src="${coverSrc}" style="width: 100%; height: auto; max-width: 794px; display: block; margin: 0 auto;" alt="Cover" /></div>`;
+    } else {
+        coverHTML = `
+            <div style="text-align: center; margin-bottom: 40px; background: #000; color: #fff; padding: 40px; page-break-after: always;">
+                <h1 style="color: #d4af37; font-size: 36pt; margin-bottom: 10px;">${userData.solutionType}</h1>
+                <h2 style="color: #fff; font-size: 24pt; margin-bottom: 10px;">${userData.companyName}, ${userData.jobTitle}</h2>
+                ${userData.studentName ? `<h3 style="color: #d4af37; font-size: 20pt;">${userData.studentName}</h3>` : ""}
+            </div>
+        `;
+    }
+
+    let htmlContent = `
+        <div style="font-family: 'Malgun Gothic', 'Dotum', sans-serif; color: #000;">
+            ${coverHTML}
+            ${getSectionHTML(chapters[0], content.section1, content.section1Image)}
+            <div style="page-break-before: always;"></div>
+            ${getSectionHTML(chapters[1], content.section2, content.section2Image)}
+            <div style="page-break-before: always;"></div>
+            ${getSectionHTML(chapters[2], content.section3, content.section3Image)}
+            <div style="page-break-before: always;"></div>
+            ${getSectionHTML(chapters[3], content.section4, content.section4Image)}
+            <div style="page-break-before: always;"></div>
+            ${getSectionHTML(chapters[4], content.section5, content.section5Image)}
+        </div>
+    `;
+
+    // Create a plain text version
+    const plainText = [
+        `${userData.solutionType}`,
+        `${userData.companyName}, ${userData.jobTitle}`,
+        `${userData.studentName || ''}`,
+        '',
+        chapters[0],
+        content.section1,
+        '',
+        chapters[1],
+        content.section2,
+        '',
+        chapters[2],
+        content.section3,
+        '',
+        chapters[3],
+        content.section4,
+        '',
+        chapters[4],
+        content.section5,
+    ].join('\n').replace(/###/g, '').replace(/!!/g, '').replace(/\*\*/g, '').replace(/<[^>]+>/g, '');
+
+    if (navigator.clipboard && window.ClipboardItem) {
+        try {
+            const htmlBlob = new Blob([htmlContent], { type: "text/html" });
+            const textBlob = new Blob([plainText], { type: "text/plain" });
+            await navigator.clipboard.write([
+                new ClipboardItem({
+                    "text/html": htmlBlob,
+                    "text/plain": textBlob,
+                })
+            ]);
+            alert("구글 Docs용 내용이 클립보드에 복사되었습니다. 새 Docs 문서를 열고(Ctrl+V) 붙여넣기 하세요.");
+        } catch (err) {
+            console.error("클립보드 복사 실패", err);
+            alert("클립보드 복사에 실패했습니다.");
+        }
+    } else {
+        alert("이 브라우저에서는 클립보드 복사를 지원하지 않습니다.");
+    }
+};
+
 export const downloadAsWord = (content: GeneratedContent, userData: UserInputData) => {
   const filename = `코칭패스 ${userData.solutionType}_${userData.companyName}_${userData.jobTitle}_${userData.studentName}`;
   
@@ -101,9 +302,10 @@ export const downloadAsWord = (content: GeneratedContent, userData: UserInputDat
   // Cover Page with Image
   let coverPage = '';
   if (content.coverImage) {
+      const coverSrc = content.coverImage.startsWith('data:') ? content.coverImage : `data:image/png;base64,${content.coverImage}`;
       coverPage = `
         <div class="CoverPage">
-            <img src="data:image/png;base64,${content.coverImage}" class="cover-img" />
+            <img src="${coverSrc}" class="cover-img" />
         </div>
         <br clear="all" style="page-break-before:always" />
       `;
@@ -168,7 +370,8 @@ export const downloadAsWord = (content: GeneratedContent, userData: UserInputDat
   const getSectionHTML = (title: string, text: string, imageBase64?: string) => {
       let imgHTML = '';
       if (imageBase64) {
-          imgHTML = `<img src="data:image/png;base64,${imageBase64}" class="infographic" alt="${title} Infographic" />`;
+          const imgSrc = imageBase64.startsWith('data:') ? imageBase64 : `data:image/png;base64,${imageBase64}`;
+          imgHTML = `<img src="${imgSrc}" class="infographic" alt="${title} Infographic" />`;
       }
       return `
         <h1>${title}</h1>
@@ -292,3 +495,4 @@ export const downloadAsWord = (content: GeneratedContent, userData: UserInputDat
   fileDownload.click();
   document.body.removeChild(fileDownload);
 };
+

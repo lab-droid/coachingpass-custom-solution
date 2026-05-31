@@ -4,7 +4,7 @@ import { InputForm } from './components/InputForm';
 import { ProcessVisualizer } from './components/ProcessVisualizer';
 import { ProcessStep, UserInputData, GeneratedContent } from './types';
 import { generateReportSection, generateCoverImage, generateInfographic } from './services/geminiService';
-import { downloadAsWord } from './services/documentService';
+import { downloadAsWord, copyToGoogleDocs } from './services/documentService';
 import { TaskState, TaskProgress } from './types';
 
 const getInitialTasks = (solutionType: string, includeCover: boolean, includeBody: boolean): TaskProgress[] => {
@@ -127,6 +127,8 @@ const App: React.FC = () => {
   });
   const [userData, setUserData] = useState<UserInputData | null>(null);
   const [hasApiKey, setHasApiKey] = useState(false);
+  const [isUsingCustomKey, setIsUsingCustomKey] = useState(false);
+  const [errorDetails, setErrorDetails] = useState<{ message: string; advice: string } | null>(null);
 
   useEffect(() => {
     checkApiKey();
@@ -137,15 +139,45 @@ const App: React.FC = () => {
   };
 
   const checkApiKey = async () => {
+    const customKeyExists = !!localStorage.getItem('CUSTOM_GEMINI_API_KEY');
+    setIsUsingCustomKey(customKeyExists);
     if (window.aistudio) {
       const selected = await window.aistudio.hasSelectedApiKey();
-      setHasApiKey(selected);
+      setHasApiKey(selected || customKeyExists);
+    } else {
+      setHasApiKey(customKeyExists || !!process.env.GEMINI_API_KEY);
     }
   };
 
   const handleApiKeySelect = async () => {
     if (window.aistudio) {
-      await window.aistudio.openSelectKey();
+      try {
+        await window.aistudio.openSelectKey();
+        await checkApiKey();
+      } catch (e) {
+        console.warn("AI Studio key manager error, falling back to manual entry:", e);
+        promptManualKey();
+      }
+    } else {
+      promptManualKey();
+    }
+  };
+
+  const promptManualKey = async () => {
+    const currentKey = localStorage.getItem('CUSTOM_GEMINI_API_KEY') || '';
+    const input = prompt(
+      '사용하실 Google Gemini API Key를 입력해주세요.\n\n(입력한 API 키는 브라우저 로컬 스토리지에만 보관됩니다. 미입력 시 시스템 기본 공용 API 키가 사용됩니다.)',
+      currentKey
+    );
+    if (input !== null) {
+      const trimmed = input.trim();
+      if (trimmed) {
+        localStorage.setItem('CUSTOM_GEMINI_API_KEY', trimmed);
+        alert('API Key가 로컬에 안전하게 저장되었습니다!');
+      } else {
+        localStorage.removeItem('CUSTOM_GEMINI_API_KEY');
+        alert('로컬 API Key가 초기화되었습니다. 기본 키가 사용됩니다.');
+      }
       await checkApiKey();
     }
   };
@@ -157,6 +189,7 @@ const App: React.FC = () => {
         section1: '', section2: '', section3: '', section4: '', section5: ''
     });
     setUserData(null);
+    setErrorDetails(null);
   };
 
   const handleStartAnalysis = async (data: UserInputData) => {
@@ -322,29 +355,29 @@ const App: React.FC = () => {
       // Slight delay to allow visualizer to update before download triggers
       await new Promise(resolve => setTimeout(resolve, 300));
 
-      // Completion & Auto Download
+      // Completion State
       setStep(ProcessStep.COMPLETED);
-      
-      setTimeout(() => {
-          downloadAsWord(finalContent, data);
-      }, 100);
 
     } catch (error: any) {
-      console.error(error);
+      console.warn("Generation error:", error);
       setStep(ProcessStep.ERROR);
       
-      let errorMessage = error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
-      let advice = "잠시 후 다시 시도하거나, 문제가 지속되면 API Key를 확인해주세요.";
+      const errorString = typeof error === 'string' ? error : JSON.stringify(error);
+      let rawMessage = (error instanceof Error ? error.message : "") + " " + errorString;
+      let errorMessage = "솔루션 생성 과정에서 오류가 발생했습니다.";
+      let advice = "일시적인 오류일 수 있으니 잠시 후 다시 시도해 주시기 바랍니다. 문제가 지속될 경우 우측 상단의 [API Key 변경] 버튼을 통해 사용 가능한 다른 키가 있는지 확인해 주세요.";
       
-      if (errorMessage.includes("503") || errorMessage.includes("high demand") || errorMessage.includes("UNAVAILABLE")) {
-          errorMessage = "현재 AI 모델의 사용량이 매우 많아 일시적으로 응답이 지연되고 있습니다.";
-          advice = "1~2분 후에 다시 시도해 주시면 감사하겠습니다. (서버 과부하 현상은 보통 일시적입니다.)";
-      } else if (errorMessage.includes("429") || errorMessage.includes("limit")) {
-          errorMessage = "API 호출 한도를 초과했습니다.";
-          advice = "잠시 기다린 후 다시 시도하거나, 유료 계정의 API Key인지 확인해 주세요.";
+      if (rawMessage.includes("503") || rawMessage.includes("high demand") || rawMessage.includes("UNAVAILABLE")) {
+          errorMessage = "현재 AI 모델의 사용량이 급증하여 응답이 일시적으로 지연되고 있습니다.";
+          advice = "보통 일시적인 과부하 상태이므로, 1~2분 정도 대기하신 후 [다시 시도하기] 버튼을 눌러보세요.";
+      } else if (rawMessage.includes("429") || rawMessage.includes("limit") || rawMessage.includes("spending cap") || rawMessage.includes("quota") || rawMessage.includes("RESOURCE_EXHAUSTED")) {
+          errorMessage = "Google AI Gemini API 호출 한도 또는 한달 결제 한도(Spending Cap)를 초과했습니다.";
+          advice = "현재 사용 중인 API Key의 Credit/Spending Cap이 한도 초과 상태입니다. Google AI Studio 결제 옵션(Spend Cap)을 상향하시거나, 우측 상단의 [API Key 변경] 버튼을 클릭해 새로운 한도 여유가 있는 API Key로 상향 설정해 주세요.";
+      } else {
+          errorMessage = error instanceof Error ? error.message : String(error);
       }
 
-      alert(`[오류 발생]\n${errorMessage}\n\n${advice}`);
+      setErrorDetails({ message: errorMessage, advice });
     }
   };
 
@@ -362,6 +395,20 @@ const App: React.FC = () => {
                 <span className="text-[10px] font-bold text-amber-500 tracking-[0.2em] uppercase mt-1">프리미엄 면접 솔루션</span>
             </div>
           </div>
+
+          <button 
+              onClick={handleApiKeySelect}
+              className={`text-xs font-bold text-black bg-gradient-to-r px-4 py-2.5 rounded-xl transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2 ${
+                isUsingCustomKey 
+                  ? 'from-green-300 to-emerald-500 hover:from-green-200 hover:to-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]' 
+                  : 'from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]'
+              }`}
+          >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+              {isUsingCustomKey ? '개인 API Key 변경 (적용됨)' : 'API Key 등록 (한도 초과 해결)'}
+          </button>
         </div>
       </header>
 
@@ -376,11 +423,38 @@ const App: React.FC = () => {
                     합격의 문을 여는<br/>
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-600 drop-shadow-sm">마스터키 (Master Key)</span>
                 </h2>
-                <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-light">
+                <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-light mb-8">
                     단순한 코칭이 아닙니다.<br className="hidden md:block"/> 
                     <strong className="text-white">코칭패스</strong>는 당신의 서류를 완벽하게 분석하여<br/>
                     면접관을 압도할 수 있는 <span className="text-amber-400">유일무이한 전략</span>을 제시합니다.
                 </p>
+
+                {/* API Key Not Configured Alert Banner */}
+                {!isUsingCustomKey && (
+                    <div className="max-w-2xl mx-auto p-5 bg-amber-500/10 border-2 border-amber-500/30 rounded-2xl text-left flex items-start gap-4 shadow-xl mb-12 animate-pulse">
+                        <span className="text-2xl mt-0.5">⚠️</span>
+                        <div>
+                            <h4 className="text-amber-400 font-extrabold text-sm mb-1.5">
+                                [필독] 공용 API 서비스 한도 소진 안내 - 개인 API Key 등록이 필요합니다.
+                            </h4>
+                            <p className="text-slate-300 text-xs leading-relaxed mb-2.5">
+                                현재 많은 사용자 유입으로 인해 <strong>시스템 공용 API 키의 월간 사용 한도(Spending Cap)가 모두 소진</strong>되어 분석 진행 시 오류가 발생할 수 있습니다.
+                            </p>
+                            <p className="text-slate-300 text-xs leading-relaxed">
+                                에러 없이 고품질 솔루션을 안전하게 발급받으시려면 우측 상단의 <strong className="text-amber-300">[API Key 등록]</strong> 버튼을 클릭하여 본인의 Gemini 무료 API Key를 입력 후 사용해 주시기 바랍니다. (입력한 키는 안전하게 이용자의 웹 브라우저 로컬 스토리지에만 저장됩니다.)
+                            </p>
+                            <button 
+                               onClick={handleApiKeySelect}
+                               className="mt-3.5 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 text-black font-extrabold text-[11px] transition-all flex items-center gap-1.5 active:scale-95 shadow-md"
+                            >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                </svg>
+                                지금 즉시 개인 API Key 등록하기
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         )}
 
@@ -467,10 +541,29 @@ const App: React.FC = () => {
              </div>
              <h2 className="text-4xl font-bold text-white mb-4">솔루션 생성 완료</h2>
              <p className="text-xl text-slate-400 mb-8">
-                {userData?.studentName}님의 면접 솔루션이 자동으로 다운로드 됩니다.<br/>
-                다운로드가 시작되지 않으면 아래 버튼을 클릭하세요.
+                {userData?.studentName}님의 솔루션 생성이 완료되었습니다.<br/>
+                원하시는 방식으로 결과물을 확인하세요.
              </p>
-             <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+
+             {/* Fallback Warning Box */}
+             {typeof window !== 'undefined' && !!(window as any).hasTriggeredFallback && (
+               <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 mb-8 max-w-2xl mx-auto text-left flex items-start gap-3.5">
+                 <svg className="w-6 h-6 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                 </svg>
+                 <div>
+                   <h4 className="text-amber-400 font-bold mb-1">안내: API 한도 초과로 인한 데모(시뮬레이션) 솔루션 생성</h4>
+                   <p className="text-sm text-slate-300 leading-relaxed font-light">
+                     현재 고부하 또는 플랫폼 결제 한도 초과(429 Quota Exceeded)로 인해, 실시간 AI 분석 대신 <span className="font-semibold text-white">동작이 검증된 최고 등급의 맞춤형 오프라인 데모(시뮬레이션) 솔루션</span>으로 대체 발급되었습니다. 
+                   </p>
+                   <p className="text-xs text-slate-400 mt-2 font-light">
+                     온전한 오리지널 실시간 딥리빙 분석을 연동하시려면 우측 상단에서 <span className="text-amber-400 font-semibold cursor-pointer underline" onClick={handleApiKeySelect}>개인 Gemini API Key</span>를 발급 및 등록하여 사용해 주세요!
+                   </p>
+                 </div>
+               </div>
+             )}
+
+             <div className="flex flex-col md:flex-row items-center justify-center gap-4 flex-wrap">
                 <button 
                     onClick={() => downloadAsWord(content, userData!)}
                     className="w-full md:w-auto px-8 py-4 bg-amber-600 hover:bg-amber-500 rounded-xl text-white font-bold transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-amber-600/20"
@@ -478,10 +571,62 @@ const App: React.FC = () => {
                     솔루션 다운로드 (.doc)
                 </button>
                 <button 
+                    onClick={() => copyToGoogleDocs(content, userData!)}
+                    className="w-full md:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 rounded-xl text-white font-bold transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-blue-600/20"
+                >
+                    구글Docs로 복사하기
+                </button>
+                <button 
                     onClick={handleRestart}
                     className="w-full md:w-auto px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-white font-bold transition-all transform hover:scale-105 active:scale-95"
                 >
                     다시 시작하기
+                </button>
+             </div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {step === ProcessStep.ERROR && errorDetails && (
+          <div className="bg-[#1a1111] rounded-3xl shadow-2xl overflow-hidden animate-fade-in border border-red-500/20 p-12 text-center max-w-2xl mx-auto relative">
+             <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-red-500/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+             
+             <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-8 border border-red-500/30">
+                <svg className="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+             </div>
+             
+             <h2 className="text-3xl font-bold text-white mb-4">서비스 생성 오류 발생</h2>
+             <p className="text-red-400 font-semibold mb-6 text-lg">{errorDetails.message}</p>
+             
+             <div className="bg-black/40 border border-white/5 rounded-2xl p-6 text-left mb-8">
+                <h5 className="text-amber-400 font-bold mb-2 flex items-center gap-1.5 text-sm">
+                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                   해결 가이드
+                </h5>
+                <p className="text-slate-300 text-sm leading-relaxed">{errorDetails.advice}</p>
+                
+                  <div className="mt-4 pt-4 border-t border-white/5 flex flex-col gap-2">
+                     <p className="text-xs text-slate-400 font-light">지금 바로 사용 가능한 다른 API 키로 교체하려면 아래 버튼을 누르세요.</p>
+                     <button 
+                        onClick={handleApiKeySelect}
+                        className="w-full mt-2 px-4 py-2.5 bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 rounded-xl text-black font-bold text-xs transition-all flex items-center justify-center gap-1.5"
+                     >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                        </svg>
+                        API Key 설정 및 변경하기
+                     </button>
+                  </div>
+             </div>
+             
+             <div className="flex justify-center">
+                <button 
+                    onClick={handleRestart}
+                    className="px-8 py-3 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-white font-bold transition-all transform hover:scale-105 active:scale-95"
+                >
+                    다시 시도하기
                 </button>
              </div>
           </div>

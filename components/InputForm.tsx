@@ -139,7 +139,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isProcessing }) 
     targetPageCount: 'AI 추천',
     analysisOptions: '',
     includeCoverImage: true,
-    includeBodyImages: true,
+    includeBodyImages: false,
     resumeFile: [],
     coverLetterFile: [],
     interviewNoticeFile: [],

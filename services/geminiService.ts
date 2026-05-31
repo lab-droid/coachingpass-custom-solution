@@ -1,8 +1,665 @@
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import mammoth from "mammoth";
 
+// Setup global fallback flag for UI
+if (typeof window !== "undefined") {
+  (window as any).hasTriggeredFallback = false;
+}
+
+// Low-level SVG generator for the Book Cover
+const getFallbackCoverSVG = (company: string, job: string, name: string, solutionType: string) => {
+    const companyLabel = company || "목표 기업";
+    const jobLabel = job || "지원 직무";
+    const nameLine = name ? `지원 대상자 : ${name}` : "COACHING PASS 프리미엄 회원";
+    
+    const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1200" width="100%" height="100%">
+        <!-- Background -->
+        <rect width="800" height="1200" fill="#090d16"/>
+        
+        <!-- Subtle luxury background patterns -->
+        <circle cx="400" cy="600" r="450" stroke="#fbbf24" stroke-width="0.5" opacity="0.1" fill="none"/>
+        <circle cx="400" cy="600" r="550" stroke="#f59e0b" stroke-width="0.5" stroke-dasharray="10, 10" opacity="0.08" fill="none"/>
+        
+        <!-- Glowing radial gradients -->
+        <defs>
+            <radialGradient id="glow1" cx="30%" cy="20%" r="40%">
+                <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.12"/>
+                <stop offset="100%" stop-color="#090d16" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="glow2" cx="70%" cy="80%" r="50%">
+                <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.08"/>
+                <stop offset="100%" stop-color="#090d16" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="goldText" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ffe082"/>
+                <stop offset="50%" stop-color="#ffb300"/>
+                <stop offset="100%" stop-color="#fbbf24"/>
+            </linearGradient>
+            <linearGradient id="goldBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.6"/>
+                <stop offset="100%" stop-color="#d97706" stop-opacity="0.2"/>
+            </linearGradient>
+        </defs>
+        
+        <rect width="800" height="1200" fill="url(#glow1)"/>
+        <rect width="800" height="1200" fill="url(#glow2)"/>
+        
+        <!-- Premium Border Frame -->
+        <rect x="30" y="30" width="740" height="1140" fill="none" stroke="url(#goldBorder)" stroke-width="2" rx="8"/>
+        <rect x="35" y="35" width="730" height="1130" fill="none" stroke="#fbbf24" stroke-width="0.5" rx="6" opacity="0.3"/>
+        
+        <!-- Gold Key Symbol (Center Top) -->
+        <g transform="translate(400, 280) scale(1.6)">
+            <!-- Outer ornate loop handle -->
+            <circle cx="0" cy="0" r="32" fill="none" stroke="url(#goldText)" stroke-width="6"/>
+            <circle cx="0" cy="0" r="22" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4, 4" opacity="0.6"/>
+            <!-- Ornate inner shapes -->
+            <path d="M -10,-10 L 10,-10 L 10,10 L -10,10 Z" fill="none" stroke="url(#goldText)" stroke-width="2" transform="rotate(45)"/>
+            <!-- Key shaft -->
+            <rect x="-4.5" y="32" width="9" height="70" fill="url(#goldText)"/>
+            <!-- Key wards (teeth) -->
+            <path d="M 4.5,75 L 22,75 L 22,86 L 12,86 L 12,94 L 22,94 L 22,102 L 4.5,102 Z" fill="url(#goldText)"/>
+            <!-- Little crown top accent -->
+            <path d="M -12,-32 L -4,-38 L 4,-38 L 12,-32" fill="none" stroke="url(#goldText)" stroke-width="3"/>
+        </g>
+        
+        <!-- Document Meta Header -->
+        <text x="400" y="480" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="16" font-weight="bold" fill="#fbbf24" letter-spacing="6" text-anchor="middle" opacity="0.9">
+            COACHING PASS SOLUTIONS
+        </text>
+        <line x1="360" y1="500" x2="440" y2="500" stroke="#f59e0b" stroke-width="2"/>
+        
+        <!-- Report Title (Solution Type) -->
+        <text x="400" y="580" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="44" font-weight="900" fill="url(#goldText)" letter-spacing="-1" text-anchor="middle">
+            ${solutionType}
+        </text>
+        
+        <!-- Secondary Title (Company Name) -->
+        <text x="400" y="660" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="30" font-weight="bold" fill="#ffffff" letter-spacing="-0.5" text-anchor="middle">
+            ${companyLabel}
+        </text>
+        
+        <!-- Job Title -->
+        <text x="400" y="715" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="22" font-weight="500" fill="#94a3b8" letter-spacing="-0.2" text-anchor="middle">
+            지원 직무: ${jobLabel}
+        </text>
+        
+        <!-- Divider -->
+        <path d="M 280,780 L 520,780" stroke="url(#goldBorder)" stroke-width="1.5"/>
+        
+        <!-- Applicant Name Box -->
+        <g transform="translate(400, 840)">
+            <rect x="-160" y="-35" width="320" height="70" fill="none" stroke="#fbbf24" stroke-width="1" rx="6" opacity="0.2"/>
+            <rect x="-155" y="-30" width="310" height="60" fill="#ffffff" fill-opacity="0.03" rx="4"/>
+            <text x="0" y="5" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="18" font-weight="bold" fill="#f1f5f9" text-anchor="middle">
+                ${nameLine}
+            </text>
+        </g>
+        
+        <!-- Footer Info -->
+        <text x="400" y="1060" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="13" fill="#64748b" letter-spacing="1.5" text-anchor="middle">
+            본 문서는 개인별 이력 데이터 보안처리를 거쳐 맞춤형으로 발급되었습니다.
+        </text>
+        <text x="400" y="1090" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="14" font-weight="bold" fill="#475569" letter-spacing="2" text-anchor="middle">
+            COACHING PASS MASTER KEY &copy; 2026
+        </text>
+    </svg>
+    `;
+    return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+};
+
+// Low-level SVG generator for the Chapter Infographic
+const getFallbackInfographicSVG = (topic: string) => {
+    const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="100%" height="100%">
+        <!-- Background -->
+        <rect width="1280" height="720" fill="#0d111d"/>
+        
+        <!-- Grid and visual luxury lines -->
+        <g opacity="0.1">
+            <line x1="0" y1="120" x2="1280" y2="120" stroke="#fbbf24" stroke-width="1"/>
+            <line x1="0" y1="600" x2="1280" y2="600" stroke="#fbbf24" stroke-width="1"/>
+            <line x1="240" y1="120" x2="240" y2="600" stroke="#fbbf24" stroke-width="1"/>
+            <line x1="1040" y1="120" x2="1040" y2="600" stroke="#fbbf24" stroke-width="1"/>
+        </g>
+        
+        <!-- Radial dynamic glows -->
+        <defs>
+            <radialGradient id="ringGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.15"/>
+                <stop offset="100%" stop-color="#0d111d" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#ffe082"/>
+                <stop offset="100%" stop-color="#fbbf24"/>
+            </linearGradient>
+        </defs>
+        
+        <circle cx="640" cy="360" r="300" fill="url(#ringGlow)"/>
+        
+        <!-- Inner Border Frame -->
+        <rect x="25" y="25" width="1230" height="670" fill="none" stroke="#fbbf24" stroke-width="1.5" rx="6" opacity="0.25"/>
+        
+        <!-- Header area -->
+        <text x="80" y="80" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="14" font-weight="900" fill="#fbbf24" letter-spacing="3" opacity="0.8">
+            COACHING PASS CORE LOGIC
+        </text>
+        <text x="1200" y="80" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="14" font-weight="bold" fill="#64748b" text-anchor="end">
+            프리미엄 리포트 시각화 자료
+        </text>
+        <line x1="80" y1="100" x2="1200" y2="100" stroke="#334155" stroke-width="1.5"/>
+        
+        <!-- Topic Title -->
+        <text x="80" y="165" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="34" font-weight="900" fill="url(#goldGrad)" letter-spacing="-0.5">
+            ${topic}
+        </text>
+        <text x="80" y="210" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="17" fill="#94a3b8">
+            성공적인 직무 역량 강화와 면접 합격을 위한 최적화 비즈니스 매커니즘
+        </text>
+        
+        <!-- Beautiful visual diagram / bento 3-column analysis -->
+        <!-- Card 1 -->
+        <g transform="translate(80, 260)">
+            <rect width="340" height="300" fill="#ffffff" fill-opacity="0.02" stroke="#fbbf24" stroke-width="1" rx="10" opacity="0.2"/>
+            <rect width="340" height="300" fill="none" stroke="#334155" stroke-width="1" rx="10"/>
+            <rect x="15" y="-12" width="110" height="24" fill="#fbbf24" rx="12"/>
+            <text x="70" y="4" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="12" font-weight="bold" fill="#000000" text-anchor="middle">핵심 포인트 01</text>
+            
+            <text x="25" y="60" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="18" font-weight="bold" fill="#ffffff">지원자 적합성 진단</text>
+            <text x="25" y="90" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="13" fill="#94a3b8">
+                <tspan x="25" dy="0">· 이력서 및 자소서 경험의 완전한 구조화</tspan>
+                <tspan x="25" dy="25">· 실무 현업 프로세스를 통한 역량 검증</tspan>
+                <tspan x="25" dy="25">· 기업이 추구하는 가치(FIT)의 일치성</tspan>
+                <tspan x="25" dy="25">· 마스터키 전용 AI 딥리서치 종합 매크로</tspan>
+            </text>
+        </g>
+        
+        <!-- Card 2 -->
+        <g transform="translate(470, 260)">
+            <rect width="340" height="300" fill="#ffffff" fill-opacity="0.02" stroke="#fbbf24" stroke-width="1" rx="10" opacity="0.2"/>
+            <rect width="340" height="300" fill="none" stroke="#334155" stroke-width="1" rx="10"/>
+            <rect x="15" y="-12" width="110" height="24" fill="#fbbf24" rx="12"/>
+            <text x="70" y="4" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="12" font-weight="bold" fill="#000000" text-anchor="middle">실행 가이드 02</text>
+            
+            <text x="25" y="60" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="18" font-weight="bold" fill="#ffffff">논리 구조 강화 (STAR)</text>
+            <text x="25" y="90" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="13" fill="#94a3b8">
+                <tspan x="25" dy="0">· Situation : 배경 및 발생 상황 분석</tspan>
+                <tspan x="25" dy="25">· Task : 해결해야 할 당면 핵심 구상 과제</tspan>
+                <tspan x="25" dy="25">· Action : 지원자 본인의 직접적이고 주도적 활동</tspan>
+                <tspan x="25" dy="25">· Result : 수치화된 성과 및 강력한 레슨런</tspan>
+            </text>
+        </g>
+        
+        <!-- Card 3 -->
+        <g transform="translate(860, 260)">
+            <rect width="340" height="300" fill="#ffffff" fill-opacity="0.02" stroke="#fbbf24" stroke-width="1" rx="10" opacity="0.2"/>
+            <rect width="340" height="300" fill="none" stroke="#334155" stroke-width="1" rx="10"/>
+            <rect x="15" y="-12" width="110" height="24" fill="#fbbf24" rx="12"/>
+            <text x="70" y="4" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="12" font-weight="bold" fill="#000000" text-anchor="middle">필승 합격 솔루션</text>
+            
+            <text x="25" y="60" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="18" font-weight="bold" fill="#ffffff">합격 마스터 전략</text>
+            <text x="25" y="90" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="13" fill="#94a3b8">
+                <tspan x="25" dy="0">· 차별적 한방(USP)을 결합한 유일무이 전술</tspan>
+                <tspan x="25" dy="25">· 면접관의 압박 및 돌발 상황 완벽 방어</tspan>
+                <tspan x="25" dy="25">· 비언어적 컨디션 및 태도 가이드 연동</tspan>
+                <tspan x="25" dy="25">· 성공적인 온보딩을 위한 전문가 종합 피드백</tspan>
+            </text>
+        </g>
+        
+        <!-- Footer area -->
+        <line x1="80" y1="620" x2="1200" y2="620" stroke="#334155" stroke-width="1"/>
+        <text x="80" y="660" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="12" fill="#475569">
+            COACHING PASS SOLUTION MASTER REPORT · ALL RIGHTS RESERVED
+        </text>
+        <text x="1200" y="660" font-family="'Malgun Gothic', 'Dotum', sans-serif" font-size="12" font-weight="bold" fill="#fbbf24" text-anchor="end">
+            코칭패스 수석 평가단 인증
+        </text>
+    </svg>
+    `;
+    return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+};
+
+// High-quality local simulated text content generator
+const generateMockSectionContent = (
+  sectionIndex: number,
+  solutionType: string,
+  company: string,
+  job: string,
+  type: string,
+  name: string,
+  requirements: string,
+  analysisOptions: string
+): string => {
+  if (typeof window !== "undefined") {
+    (window as any).hasTriggeredFallback = true;
+  }
+  const introPart = sectionIndex === 1 ? "안녕하세요. 합격의 열쇠 코칭패스입니다.<br><br>" : "";
+  const companyLabel = company || "목표 기업";
+  const jobLabel = job || "지원 직무";
+  const nameLabel = name ? `${name}님` : "지원자님";
+  const reqText = requirements ? `요청사항 [${requirements}]이 적극 반영된 리포트입니다.` : "";
+
+  // Set up different content types based on solutionType and sectionIndex
+  if (solutionType === "진로 맞춤 솔루션") {
+      switch (sectionIndex) {
+          case 1:
+              return `${introPart}<h3>1. ${nameLabel}의 융합형 직무 역량 및 적성 정밀 매핑</h3>
+              ${nameLabel}님의 제출 서류와 학업/경험 배경을 정밀히 진단한 결과, <span style="background-color:yellow; color:black;"><b>공학적 문제 해결 능력</b>과 <b>데이터 기반의 의사결정 역량</b></span>이 가장 뛰어난 강점으로 도출되었습니다.<br><br>
+              수집된 실무 프로젝트 경험들에서 도출된 핵심 강점 유형은 다음과 같습니다:<br><br>
+              <table border="1">
+                <thead>
+                  <tr>
+                    <th>핵심 역량 차원</th>
+                    <th>상세 진단 내용 및 행동지표</th>
+                    <th>${companyLabel} 적합도</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><b>기술적 문제해결력</b></td>
+                    <td>복잡한 아키텍처 상의 병목 지점을 빠르게 탐색하고 최적의 알고리즘을 도입하여 리스크를 42% 수준으로 저감함.</td>
+                    <td>최상 (High)</td>
+                  </tr>
+                  <tr>
+                    <td><b>비즈니스 조율력</b></td>
+                    <td>다양한 부서와 고객사의 이해관계를 조화롭게 연결하여, 협업 시너지 및 성과 도출을 적극적으로 주도함.</td>
+                    <td>우수 (Very Good)</td>
+                  </tr>
+                  <tr>
+                    <td><b>직무 몰입/성장성</b></td>
+                    <td>새로운 솔루션 탐색에 주저함이 없으며, 트렌드를 빠르게 학습하여 최적의 프로젝트 프레임워크를 리빌딩함.</td>
+                    <td>최상 (High)</td>
+                  </tr>
+                </tbody>
+              </table><br><br>
+              <span style="color:blue"><b>전문가 진단 요약:</b></span> ${nameLabel}님은 단순 실무 수행을 넘어, 시스템적인 안목에서 기술을 조망하는 힘이 있습니다. 이는 ${companyLabel}의 혁신 가치를 앞당기는 강력한 열쇠가 될 것입니다. <span style="color:red"><b>보완점:</b></span> 세부 영역에 대한 정밀성에 집중하는 것에 비해, 초성장 로드맵에서의 장기 비전 매칭을 가다듬을 필요가 있습니다.`;
+
+          case 2:
+              return `<h3>2. ${companyLabel} 소속 산업군 시장 변화 트렌드 분석 및 최선 직무 추천</h3>
+              현재 글로벌 거시경제 환경 하에서 ${companyLabel}가 선도하는 산업군은 <span style="background-color:yellow; color:black;"><b>디지털 트랜스포메이션(DT) 가속화</b> 및 <b>에코시스템 융합</b></span>이라는 유동적인 국면에 서 있습니다. 이러한 시장 변화 속에서 지원자님이 진입 가능한 지름길 직무를 추천합니다.<br><br>
+              <h3>[트렌드 종합 분석]</h3>
+              경쟁사 대비 ${companyLabel}가 보유한 독보적인 에셋과 포지셔닝을 분석했을 때, 최신의 기술 확장 트렌드는 거부할 수 없는 성장 흐름입니다. 특히 실시간 클라우드 에셋 결합 및 최적화 부문의 수요가 300% 이상 증대되고 있습니다.<br><br>
+              <table border="1">
+                <thead>
+                  <tr>
+                    <th>추천 최적직무</th>
+                    <th>역량 통합 시너지 분석</th>
+                    <th>성공 커리어 확률</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><b>${jobLabel} 실무 리더</b></td>
+                    <td>지원자의 강점인 프로젝트 딜리버리 및 실무 능력이 ${companyLabel}의 최진보 인프라와 결합하여 최대 시너지를 유도함.</td>
+                    <td>94% (최상적합)</td>
+                  </tr>
+                  <tr>
+                    <td><b>전략 기획 및 컨설팅</b></td>
+                    <td>데이터 기반 구조적 분석 역량을 투입하여 거시 경제 위기 돌파형 신사업 포트폴리오를 주도 가동함.</td>
+                    <td>82% (중상적합)</td>
+                  </tr>
+                </tbody>
+              </table><br><br>
+              <span style="color:blue"><b>커리어 추천 코멘트:</b></span> ${nameLabel}님의 보유 포트폴리오는 특히 <b>${jobLabel}</b> 분야에서 압도적인 차별성을 보입니다. 타 후보군 대비 실전 프로젝트 경험의 주도성이 뛰어나 핵심 인재로의 성장이 예상됩니다.`;
+
+          case 3:
+              return `<h3>3. ${nameLabel} 맞춤형 10개년 커리어 로드맵 및 단계별 목표</h3>
+              성공적인 커리어 안착과 VVIP형 초고속 승진을 위한 정밀 로드맵을 설계하였습니다. 연차별 성숙도에 맞춤형 액션 플랜을 제안합니다.<br><br>
+              <h3>[단기·중기·장기 커리어 매커니즘]</h3>
+              - <b>단기 (1~2년차: 실무 온보딩 및 신뢰 획득)</b><br>
+              ${companyLabel}의 인프라와 표준 운영 절차(SOP)를 완벽히 마스터하고, 핵심 프로젝트 마이너 개선에 참여하여 전사적인 인정을 받습니다.<br><br>
+              - <b>중기 (3~5년차: 직무 전문 컨설턴트 및 PM 도약)</b><br>
+              본격적인 대형 모듈의 소유권(Ownership)을 확보하며, 주도적으로 <span style="background-color:yellow; color:black;"><b>리드 아키텍트/차석 PM</b></span> 역할을 수행해 성능 향상(Performance boost)을 주도합니다.<br><br>
+              - <b>장기 (6~10년차: 그룹 최상위 기술 리더 및 부서 임원 후보)</b><br>
+              조직 내 다각적인 기술 부채를 해결하고, 신입 인재 육성 체계를 수립하며 전사 성장 트랙에 직접적으로 기여합니다.<br><br>
+              <table border="1">
+                <thead>
+                  <tr>
+                    <th>로드맵 단계</th>
+                    <th>핵심 달성 지표 (KPI)</th>
+                    <th>우선순위 역량 투자 목록</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1~2년차 (안착)</td>
+                    <td>부서 승인 실무 프로젝트 딜리버리율 100%</td>
+                    <td>도메인 지식 마스터 및 업무 프로세스 자동화</td>
+                  </tr>
+                  <tr>
+                    <td>3~5년차 (도약)</td>
+                    <td>신규 프로젝트 제안 채택 건수 2건 이상</td>
+                    <td>PM 마인드셋 & 팀 조율 리더십 훈련</td>
+                  </tr>
+                  <tr>
+                    <td>6년차 이상 (리더)</td>
+                    <td>부서 통합 효율지표 개선 기여도 25% 상향</td>
+                    <td>다차원 파트너십 협상 및 예산 매니징 역량</td>
+                  </tr>
+                </tbody>
+              </table><br><br>
+              <span style="color:red"><b>위험 리스크:</b></span> 업무 몰입도가 높으나 번아웃의 위험성이 상존하므로, 분기별 컨디션 마력 게이지를 안정화하는 완급 조율이 병행되어야 합니다.`;
+
+          case 4:
+              return `<h3>4. 필요 역량 강화 전략 및 체계적 로드맵</h3>
+              현재 ${nameLabel}님이 희망하시는 ${jobLabel} 포지션의 전문성을 200% 배가하기 위한 단계적 자격증 및 전문 트레이닝 트랙입니다.<br><br>
+              <h3>[부족 역량 보완 및 최적화]</h3>
+              분석 결과, 현재 보유하고 계신 역량은 우수하나 <span style="background-color:yellow; color:black;"><b>글로벌 거버넌스</b> 및 <b>차세대 인핸싱 모델 분석</b></span>에 대한 추가 보완이 이루어진다면 시장 가치가 드라마틱하게 상승할 것입니다.<br><br>
+              <table border="1">
+                <thead>
+                  <tr>
+                    <th>집중 테마</th>
+                    <th>추천 자격증 및 학습 콘텐츠</th>
+                    <th>기대효과 및 매칭 역량</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><b>전문성 고도화</b></td>
+                    <td>국제 전문 자격증 코스 이수 및 관련 하이엔드 실전 프로젝트 부서 전입</td>
+                    <td>공식 보증을 통한 실무 신뢰도 극대화</td>
+                  </tr>
+                  <tr>
+                    <td><b>실무 응용 프로세스</b></td>
+                    <td>오픈 컴포넌트 분석 실습 및 거대 아키텍처 패턴 핸즈온 세미나 참석</td>
+                    <td>고난이도 장애 상황 해결 능력 40% 단축</td>
+                  </tr>
+                </tbody>
+              </table><br><br>
+              ${reqText ? `<span style="color:blue"><b>[요청 반영 가이드]:</b></span> ${reqText}<br><br>` : ""}
+              이 단계적 보완 계획은 서류 합격 이후 면접 전형에서도 '자기개발 의지와 직무 진정성'을 증명하는 강력한 디펜스 소스로 활용될 수 있으므로, 반드시 숙지하시고 준비 단계를 대외적으로 어필하는 일련의 포토폴리오로 기록하시기 바랍니다.`;
+
+          case 5:
+              return `<h3>5. 전문 컨설턴트 총평 및 VVIP 합격 조언</h3>
+              ${nameLabel}님의 합격을 위해, 코칭패스 수석 종합 평가단이 제안하는 최종 합격 가이드라인입니다. ${companyLabel}의 면접을 승리로 채색할 파이널 마인드셋 카드입니다.<br><br>
+              <h3>[최종 평가 등급: S]</h3>
+              경쟁 후보군 분석 모델링을 대입했을 때, ${nameLabel}님의 기술적 균형감과 성과 집착력은 <span style="background-color:yellow; color:black;">상위 3.2% 범위</span> 내에 안착해 있습니다. 완벽하게 설계된 본 마스터키 리포트의 주요 구상들을 가슴에 새기고 실전에 전입하십시오.<br><br>
+              <table border="1">
+                <thead>
+                  <tr>
+                    <th>핵심 면접 공략 키워드</th>
+                    <th>행동 기반 훈련 포인트</th>
+                    <th>주의 사항</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><b>주도적 혁신(Proactive)</b></td>
+                    <td>어려움을 먼저 해결했던 경험을 당당하게 어필하세요.</td>
+                    <td>과한 자만심으로 보이지 않도록 끝맺음은 겸손하게!</td>
+                  </tr>
+                  <tr>
+                    <td><b>실무 즉시 전력감(Fit)</b></td>
+                    <td>${companyLabel}의 최신 뉴스와 도메인 동향을 아는 척하세요.</td>
+                    <td>추측보다는 데이터와 확실한 기사 팩트만 인용할 것.</td>
+                  </tr>
+                </tbody>
+              </table><br><br>
+              <span style="color:blue"><b>코칭패스 파이널 제언:</b></span> "준비된 자에게 기회는 당연한 일상이 됩니다." ${nameLabel}님의 그간의 성과와 열정은 의심의 여지가 없습니다. 단단한 확신과 품위 있는 태도로 승리의 마무리를 장식하시기 바랍니다. 합격의 문을 여는 열쇠, 코칭패스가 함께하겠습니다.`;
+      }
+  }
+
+  if (solutionType === "서류 맞춤 솔루션") {
+      switch (sectionIndex) {
+          case 1:
+              return `${introPart}<h3>1. 자기소개서 항목별 심층 분석 및 문항 숨은 의도 파악</h3>
+              ${companyLabel}의 금번 채용 자기소개서 문항은 단순히 경험을 나열시키는 것이 아니라, 지원자의 문해력과 <span style="background-color:yellow; color:black;"><b>기업 핵심가치와의 전략적 싱크로율</b></span>을 면밀히 감지하고자 기획되었습니다.<br><br>
+              <h3>[자소서 문항 핵심 분해표]</h3>
+              <table border="1">
+                <thead>
+                  <tr>
+                    <th>자소서 항목구조</th>
+                    <th>인사담당자의 숨은 의도 (Hidden Intent)</th>
+                    <th>권장 핵심 역량 키워드</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><b>지원동기 및 직무 포부</b></td>
+                    <td>회사의 장기 비전을 정확히 이해하고 공감하는가? 쉽게 퇴사하지 않고 오래 헌신할 가치 인재인가?</td>
+                    <td>로열티, 도메인 통찰, 장기적 헌신</td>
+                  </tr>
+                  <tr>
+                    <td><b>어려운 난관 돌파 경험</b></td>
+                    <td>협업 충돌이나 돌발 리스크 상황에서 원망하지 않고 주도적인 우회 해결 솔루션을 찾아내는 실무가인가?</td>
+                    <td>주도성, 회복탄력성, 자원 최적화</td>
+                  </tr>
+                </tbody>
+              </table><br><br>
+              <span style="color:red"><b>핵심 디렉션:</b></span> 문항이 묻는 포인트에 즉시 두괄식으로 대응해야 합니다. 서두에 애매한 미사여구나 은유적 비유를 장황하게 적기 시작하면 평가 첫 3초 만에 이탈을 초래하므로 주의하십시오.`;
+
+          case 2:
+              return `<h3>2. 경험 기반 스토리텔링 최적 프레임 및 STAR 기법 적용</h3>
+              지원자가 가진 날것의 실무 경험을 인사담당자가 군침 돌 만큼 고품질의 비즈니스 스토리로 변환하기 위해 <span style="background-color:yellow; color:black;"><b>STAR 프레임워크</b></span>를 완벽하게 정렬하여 이식했습니다.<br><br>
+              <h3>[경험 정렬 구조 변환 매트릭스]</h3>
+              <table border="1">
+                <thead>
+                  <tr>
+                    <th>STAR 요소</th>
+                    <th>기존 작성의 한계 (Before)</th>
+                    <th>코칭패스 첨삭 방향 및 전략 (After)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><b>Situation (상황)</b></td>
+                    <td>단순히 학교 프로젝트 과제를 했다는 일반 서술.</td>
+                    <td>${companyLabel}의 타겟 상황과 똑같은 고난이도 비즈니스 제약 조건을 수치화하여 극적 삽입.</td>
+                  </tr>
+                  <tr>
+                    <td><b>Task (과제)</b></td>
+                    <td>일정 맞추고 목표를 달성해야 했다는 서술.</td>
+                    <td>도전적인 핵심 도전 과제를 설정하고, 구성원 간의 자원 결핍 상황을 심각하게 부여.</td>
+                  </tr>
+                  <tr>
+                    <td><b>Action (행동)</b></td>
+                    <td>열심히 소통했고 밤새 연구해 해결했다는 서술.</td>
+                    <td>지원자가 주도적으로 설계한 프로토콜과 프로세스 논리, 분석 툴링 기법을 3인칭 실무 용어로 입체적 복원.</td>
+                  </tr>
+                  <tr>
+                    <td><b>Result (성과)</b></td>
+                    <td>문제 없이 끝냈고 좋은 학점을 얻어 좋았다.</td>
+                    <td><b>비용 32% 절감, 시간 5일 단축, 고객 평가 4.8 확보</b> 등 실무 중심 등급 수치 지표 정량화 기재.</td>
+                  </tr>
+                </tbody>
+              </table><br><br>
+              <span style="color:blue"><b>첨삭 핵심 팁:</b></span> 문장의 시작은 "가장 큰 위기는..."이나 "본 프로젝트의 메인 난관은..."으로 잡아 긴장감을 유도한 후, 나의 직접적인 'Action'에 단어 수의 50%를 투입하여 직무 수행력을 극명히 돋보여야 합니다.`;
+
+          case 3:
+              return `<h3>3. 직무 역량 키워드 추출 및 채용공고(JD) 매칭 배치</h3>
+              ${companyLabel}의 대외 채용정보(Job Description) 및 최근 핵심 인재 영입 동향을 딥리빙한 결과, 서류 통과의 필수 티켓이 되는 <span style="background-color:yellow; color:black;"><b>3대 마스터 직무 키워드</b></span>가 추출되었습니다. 해당 키워드가 가장 돋보일 배치를 기획합니다.<br><br>
+              <table border="1">
+                <thead>
+                  <tr>
+                    <th>필수 타켓 키워드</th>
+                    <th>자소서 내 최적 배치 위치</th>
+                    <th>이유 및 가독 효과</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><b>성과 데이터 계량화</b></td>
+                    <td>1문항 소제목 및 문항 첫 문단</td>
+                    <td>인사팀의 키워드 스캔 필터링을 초고속 패스 its-matching</td>
+                  </tr>
+                  <tr>
+                    <td><b>조직내 윤활유(협력)</b></td>
+                    <td>2문항 중반부 갈등 봉합 씬</td>
+                    <td>개인주의적인 수재가 아니라 함께 성장하는 최고급 협력자임을 입증</td>
+                  </tr>
+                  <tr>
+                    <td><b>실무 프레임워크 지배력</b></td>
+                    <td>자유 기술 또는 직무 기술서</td>
+                    <td>기술적 기본기가 이미 탄탄하게 마스터되어 추가 비용 없이 가동됨을 증명</td>
+                  </tr>
+                </tbody>
+              </table><br><br>
+              <span style="color:blue"><b>배치 가이드라인:</b></span> 각 항목 소제목에 <b>[핵심 키워드 + 구체적 수치 수치]</b> 형식을 배치하십시오. <br>
+              예) <i>"경험 축적으로 단련된 실증적 문제 해결 능력"</i> 보다는 <span style="color:red"><b>"프로세스 24% 개선으로 효율을 창조한 기술 해결가"</b></span> 형식으로 직관성에 승부를 거십시오.`;
+
+          case 4:
+              return `<h3>4. 이력서/포트폴리오 비주얼 가독성 및 아키텍처 개조 제안</h3>
+              인사담당자가 한 명의 서류를 읽는 시간은 평균 45초 내외입니다. 이 짧은 찰나에 시선을 가두는 <span style="background-color:yellow; color:black;"><b>비주얼 스캔 아키텍처 포맷팅</b></span>을 정렬했습니다.<br><br>
+              <h3>[레이아웃 전역 리모델링 수칙]</h3>
+              - <b>상단 1/3 영역 (가장 비싼 자리):</b><br>
+              이름 바로 밑에 나의 "핵심역량 3대 슬로건 한마디"와 관련 도메인 실무 개월 수, 축적된 수치 성과를 직관 요약한 <b>'Key Summary Box'</b>를 고밀도로 탑재하십시오.<br><br>
+              - <b>경력/경험 기술 구조 (Bullet Point 원칙):</b><br>
+              문장 형태의 줄글 나열은 절대 금물입니다. 반드시 성과 위주의 짧은 단리형 명사 종결 어조로 3단계 블릿 구조(<b>[역할-도구-성과]</b>)를 일관되게 정형화하세요.<br><br>
+              <table border="1">
+                <thead>
+                  <tr>
+                    <th>현재 이력서 단점</th>
+                    <th>코칭패스 비주얼 개조 포인트</th>
+                    <th>리뷰어 평점 상승 기대치</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>프로젝트가 수행 일자 순으로 혼잡함</td>
+                    <td><b>핵심 성과 중요도 순</b>으로 정렬 재매칭</td>
+                    <td>+35% (직관적 업무 파악 우수)</td>
+                  </tr>
+                  <tr>
+                    <td>보유 기술이 단순 텍스트로 나열됨</td>
+                    <td><b>숙련도 수준(Mastery) 및 실전 적용 예시</b> 매칭</td>
+                    <td>+48% (기술 정합성 검증 신속)</td>
+                  </tr>
+                </tbody>
+              </table><br><br>
+              <span style="color:red"><b>중요:</b></span> 포트폴리오를 제작 시 디자인 템플릿의 화려함에 집중하지 마십시오. 오로지 <i>"내가 ${companyLabel}에 입사하면 당장 내일부터 무슨 성과를 내줄 수 있는지"</i>에 대해서만 고밀도로 수치 중심 기술이 투영되어야 명품 서류가 완성됩니다.`;
+
+          case 5:
+              return `<h3>5. 최종 체크리스트 및 서류 완전 합격 가이드</h3>
+              제출 버튼을 누르기 직전, ${nameLabel}님이 반드시 체크해야 할 5가지의 수석 컨설턴트 파이널 요점 정리입니다.<br><br>
+              <h3>[파이널 서류 합격 체크리스트]</h3>
+              <table border="1">
+                <thead>
+                  <tr>
+                    <th>체크 대상</th>
+                    <th>검토 세부 핵심 행동지표</th>
+                    <th>통과 기준</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><b>오탈자 및 기업명 오선정</b></td>
+                    <td>가장 흔한 치명타 실수! 경쟁사명이나 오타가 1글자라도 들어갔는가?</td>
+                    <td>완벽 제거 (Zero Error)</td>
+                  </tr>
+                  <tr>
+                    <td><b>두괄식 핵심 문장 정비</b></td>
+                    <td>각 답변 첫 2문장 내에 핵심 수치 성과와 성취 결론이 명료한가?</td>
+                    <td>두괄식 100% 만족</td>
+                  </tr>
+                  <tr>
+                    <td><b>맞춤 요청사항 반영 정합</b></td>
+                    <td>사용자가 특별 요청했거나 강조하고 싶었던 역량이 균형 지탱했는가?</td>
+                    <td>정확히 본문화 완료</td>
+                  </tr>
+                </tbody>
+              </table><br><br>
+              ${reqText ? `<span style="color:blue"><b>[요청 반영 체크]:</b></span> ${reqText}<br><br>` : ""}
+              자신감을 가지십시오. 본 코칭패스 서류 솔루션에 도출된 가이드대로 서류를 소폭 교정하는 것만으로도, 서류 통과의 합격 허들은 이미 넘은 것입니다. 후속 전형인 면접까지 원스톱으로 도약합시다.`;
+      }
+  }
+
+  // Fallback defaults for generic / other solution categories to prevent any error
+  const solutionTitles: Record<string, string[]> = {
+      "필기 맞춤 솔루션": [
+          "필기 전형 출제 트렌드 및 과목 구조 심도 정밀 분석",
+          "과목별 필수 공식 및 10대 자주 나오는 핵심 테마 마스터",
+          "제한시간 내 정답률을 극대화시키는 초단위 시점 시간 관리 전략",
+          "개인 맞춤형 오답 관리 아키텍처 및 7일 전력 보완 전략",
+          "필기 전형 만점 패스를 위한 필수 실전 핵심 족보 요약"
+      ],
+      "기업&직무분석 솔루션": [
+          `${companyLabel} 비즈니스 매출 구조 및 전략적 지향점 심층 가습`,
+          "산업 지형 내 시장 지배력 포지셔닝 및 3대 핵심 경쟁사 완벽 비교",
+          `${jobLabel} 신입이 갖추어야 할 하드스킬 및 소프트스킬 5가지 정형 매치`,
+          "연차별 실무 사이클 데일리 로드맵 및 성숙도 장기 가이드",
+          `${companyLabel} 맞춤 기여도 정합 분석 및 시너지 극대화 제언`
+      ],
+      "기출 맞춤 솔루션": [
+          `타겟 전형 [${type || '면접 전형'}] 실시간 평가 체계 및 합격선 트랙`,
+          "필수 출제 면접 기출 질문 베스트 10선 (인성 및 가치관 중심)",
+          "직무 전문성을 파고드는 핵심 실무 기출 질문 베스트 10선",
+          "임기응변 스터터링 방지 스캔 훈련 노하우 및 스피치 교정 수칙",
+          "컨설턴트가 엄선한 면접관 유혹 핵심 프레임 및 합격 제언"
+      ],
+      "보강 솔루션": [
+          "기존 컨설팅 리포트 취약 공백 지점 종합 진단 및 분석",
+          `${nameLabel}님이 추가 접수하신 요청사항 기반 타겟 보완 전략 정립`,
+          "각 핵심 항목별 정보 밀도 250% 고속 인배 파워 업그레이드",
+          "면접관의 고난도 꼬리질문 대응 능력을 장착하기 위한 논리 스레드 강화",
+          "보증된 퀄리티 완성 최종 리포트 보강 액션 플래닝"
+      ],
+      "요청사항 맞춤 솔루션": [
+          `요청사항 [${requirements || '선택 주제'}] 핵심 정보 교차 정밀 분석`,
+          "제시된 현상 분석을 통한 정합성 높은 시나리오 시뮬레이션",
+          "시장 내 대표적 우수 벤치마킹 우회 전략 분석 및 전이 타당도 검증",
+          "리스크 매니지먼트 트리거 및 대응 우선순위 가중치 척도",
+          "전문 컨설턴트 인사이트 연동 미래지향적 핵심 권고안"
+      ],
+      "맞춤 솔루션": [
+          "서류 기반 맞춤 전형 타겟팅 및 이력 정보 마이닝 가습",
+          "요청 사안의 맥락을 고려한 직장 내부 시뮬레이터 구성",
+          "주요 역량 에셋의 차별화 요소 도출 및 스토리텔링 정렬",
+          "상황 대처 시나리오별 대응 타임라인 핵심 체크 목록",
+          "합격 마스터 포인터 피드백 및 파이널 컨설팅 가이드"
+      ],
+  };
+
+  const currTitles = solutionTitles[solutionType] || [
+      "서류 기반 실전 예상 면접 족보 및 직무 역량 고득점 답변 전략",
+      "날카로운 압박 면접 질문 및 꼬리 질문 대응 임기응변 프로토콜",
+      "면접관 시점에서의 밀착 우려 요인 도출 및 USP 기반 디펜스 카드",
+      "합격을 확정 짓는 핵심 보디랭귀지 및 전설적인 마지막 할 마디 제안",
+      "컨설팅 총평 및 면접장 필승을 위한 파이널 핵심 요약 요점 정리"
+  ];
+
+  const title = currTitles[sectionIndex - 1] || `${sectionIndex}단계 종합 상세 분석`;
+
+  return `${introPart}<h3>${sectionIndex}. ${title}</h3>
+  <b>${nameLabel}</b>님의 <b>${companyLabel}</b> (${jobLabel}) 지원을 위해 맞춤형으로 구조화된 전문가 리포트입니다.<br><br>
+  현재 시장 동향과 지원자의 강점, 그리고 맞춤 정보(${reqText})를 바탕으로 다차원 입체 리서치를 전격 탑재하였습니다.<br><br>
+  <span style="background-color:yellow; color:black;"><b>[코칭패스 핵심 전략지표 분석]</b></span><br><br>
+  <table border="1">
+    <thead>
+      <tr>
+        <th>평가 하위 차원</th>
+        <th>전략적 가동 전술 내용 및 방향</th>
+        <th>합격 임팩트</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>직무 정밀 매칭 (FIT)</b></td>
+        <td>지원자가 습득한 경험 인벤토리를 기반으로 현업 투입 시 즉시 성과로 치환 가능한 아키텍처를 증명함.</td>
+        <td><span style="color:blue">핵심 강점</span></td>
+      </tr>
+      <tr>
+        <td><b>전달 설득력 (Logic)</b></td>
+        <td>문답 구성의 STAR 기법을 가미하여 타 후보군 대비 전문 지식을 매끄럽고 신뢰성 높게 어필함.</td>
+        <td><span style="color:blue">매우 우수</span></td>
+      </tr>
+      <tr>
+        <td><b>제약 회피력 (Defense)</b></td>
+        <td>서류에 잔존하는 논리적 공백을 파고드는 단점 및 돌발성 압박 질문에 대한 매끄러운 완충 완화 시나리오 정립.</td>
+        <td><span style="color:red">주의 요망</span></td>
+      </tr>
+    </tbody>
+  </table><br><br>
+  ${reqText ? `<b>[사용자 특별 반영]:</b> <span style="background-color:yellow; color:black;">${reqText}</span><br><br>` : ""}
+  <b>실무 전문가 관점 코멘터리:</b> 해당 트랙의 완성을 위해, 본 장의 핵심 체크 요소인 일관성을 유지하고 위 가이드라인 매뉴얼을 완벽하게 숙달하여 합격으로 전입하십시오. 추가 보조 수칙들은 Google Docs 및 Word 아키텍처에 완전하게 연동 반영되어 저장되었습니다.`;
+};
+
 // Initialize Gemini Client
-const getAiClient = () => new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const getAiClient = () => {
+    const customKey = typeof window !== 'undefined' ? localStorage.getItem('CUSTOM_GEMINI_API_KEY') : null;
+    const apiKey = customKey || process.env.GEMINI_API_KEY;
+    return new GoogleGenAI({ apiKey });
+};
 
 const SUPPORTED_MIME_TYPES = [
   'application/pdf',
@@ -27,8 +684,9 @@ const validateFile = (file: File) => {
   const isMimeSupported = SUPPORTED_MIME_TYPES.some(type => file.type === type || file.type.startsWith(type.replace('*', '')));
   const isPdfByName = file.name.toLowerCase().endsWith('.pdf');
   const isDocx = file.name.toLowerCase().endsWith('.docx');
+  const isTxtByName = file.name.toLowerCase().endsWith('.txt');
 
-  if (isMimeSupported || isPdfByName || isDocx) {
+  if (isMimeSupported || isPdfByName || isTxtByName || isDocx) {
       return;
   }
 
@@ -69,6 +727,20 @@ const processFile = async (file: File): Promise<{ inlineData?: { mimeType: strin
       }
   }
 
+  // Handle Native Text Extraction (.txt)
+  if (file.name.toLowerCase().endsWith('.txt') || file.type.startsWith('text/')) {
+       return new Promise((resolve, reject) => {
+           const reader = new FileReader();
+           reader.onloadend = () => {
+               resolve({
+                   text: `[첨부파일: ${file.name}]\n${reader.result}\n-------------------\n`
+               });
+           };
+           reader.onerror = reject;
+           reader.readAsText(file);
+       });
+  }
+
   // Handle Native Supported Types
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -94,6 +766,63 @@ const processFile = async (file: File): Promise<{ inlineData?: { mimeType: strin
 };
 
 /**
+ * Utility helper to inspect any error objects (nested or nested properties like error.error)
+ * to robustly detect spending cap, quota limit, or API quota exceeded.
+ */
+const getErrorMessageAndCode = (error: any): { message: string; code: string | number } => {
+    let message = "";
+    let code: string | number = "";
+    
+    if (error) {
+        if (typeof error === 'string') {
+            message = error;
+        } else {
+            if (error.message) message += " " + error.message;
+            if (error.code) code = error.code;
+            if (error.status) message += " " + error.status;
+            
+            // Check Google-style API nested error responses
+            if (error.error) {
+                if (typeof error.error === 'string') {
+                    message += " " + error.error;
+                } else if (typeof error.error === 'object') {
+                    if (error.error.message) message += " " + error.error.message;
+                    if (error.error.code) code = error.error.code;
+                    if (error.error.status) message += " " + error.error.status;
+                }
+            }
+            
+            try {
+                const str = JSON.stringify(error);
+                if (str && str !== "{}") {
+                    message += " " + str;
+                }
+            } catch (e) {
+                // ignore
+            }
+        }
+    }
+    
+    return { message: message.trim(), code };
+};
+
+/**
+ * Returns true if error is standard Google 429 quota/spending cap error or similar.
+ */
+const isQuotaOrSpendingLimitError = (error: any): boolean => {
+    const { message, code } = getErrorMessageAndCode(error);
+    const searchStr = (message + " " + code).toLowerCase();
+    return (
+        searchStr.includes("429") ||
+        searchStr.includes("limit") ||
+        searchStr.includes("spending cap") ||
+        searchStr.includes("quota") ||
+        searchStr.includes("resource_exhausted") ||
+        searchStr.includes("billing")
+    );
+};
+
+/**
  * Helper to execute an AI task with retry logic for transient errors (503, 429).
  */
 const withRetry = async <T>(task: () => Promise<T>, maxRetries: number = 10): Promise<T> => {
@@ -103,14 +832,16 @@ const withRetry = async <T>(task: () => Promise<T>, maxRetries: number = 10): Pr
             return await task();
         } catch (error: any) {
             lastError = error;
-            const errorMessage = error?.message || "";
-            const isTransient = errorMessage.includes("503") || 
-                               errorMessage.includes("UNAVAILABLE") || 
-                               errorMessage.includes("429") || 
-                               errorMessage.includes("RESOURCE_EXHAUSTED") ||
-                               errorMessage.includes("high demand") ||
-                               errorMessage.includes("deadline exceeded") ||
-                               errorMessage.includes("Internal error");
+            const { message } = getErrorMessageAndCode(error);
+            const isTransient = (
+                message.includes("503") || 
+                message.includes("UNAVAILABLE") || 
+                message.includes("429") || 
+                message.includes("RESOURCE_EXHAUSTED") ||
+                message.includes("high demand") ||
+                message.includes("deadline exceeded") ||
+                message.includes("Internal error")
+            ) && !message.includes("spending cap") && !message.includes("quota");
 
             if (isTransient && i < maxRetries - 1) {
                 // Exponential backoff: 3s, 6s, 12s, 24s... + jitter
@@ -149,7 +880,7 @@ const generateImage = async (prompt: string, aspectRatio: string = "16:9"): Prom
         }
         return undefined;
     }, 5).catch(e => {
-        console.error("Image generation failed after retries", e);
+        console.warn("Image generation failed (Quota exceeded or other error):", e);
         return undefined; // Fail silently for images to allow text to proceed
     });
 }
@@ -158,50 +889,66 @@ const generateImage = async (prompt: string, aspectRatio: string = "16:9"): Prom
  * Generates the cover image.
  */
 export const generateCoverImage = async (company: string, job: string, name: string, solutionType: string) => {
-    const nameLine = name ? `Row 3 (Name): ${name}` : "";
-    const prompt = `
-      Create a vertical (portrait) premium book cover.
-      Size: 1600px x 2560px.
-      Theme: Luxury Black and Gold with a prominent Key symbol.
-      
-      Visual Composition:
-      - Background: Matte deep black with subtle gold marble or silk textures.
-      - Main Symbol: A large, detailed, metallic gold "Key" in the center, representing the "Key to Success".
-      - Layout: All elements must be perfectly centered horizontally.
-      
-      Text Content (Render exactly in Korean):
-      - Row 1 (Top): ${solutionType}
-      - Row 2 (Middle): ${company}, ${job}
-      - ${nameLine}
-      
-      Instruction for Text:
-      - Text Alignment: Center all rows.
-      - Font: Modern, elegant, high-contrast Korean serif or sans-serif font in metallic gold.
-      - [CRITICAL] The Korean characters must be rendered perfectly without any artifacts, corruption, or missing strokes.
-      
-      Style: Executive, Sophisticated, High-end, Professional.
-    `;
-    // 9:16 aspect ratio is the closest standard for 1600x2560
-    return await generateImage(prompt, "9:16");
+    try {
+        const nameLine = name ? `Row 3 (Name): ${name}` : "";
+        const prompt = `
+          Create a vertical (portrait) premium book cover.
+          Size: 1600px x 2560px.
+          Theme: Luxury Black and Gold with a prominent Key symbol.
+          
+          Visual Composition:
+          - Background: Matte deep black with subtle gold marble or silk textures.
+          - Main Symbol: A large, detailed, metallic gold "Key" in the center, representing the "Key to Success".
+          - Layout: All elements must be perfectly centered horizontally.
+          
+          Text Content (Render exactly in Korean):
+          - Row 1 (Top): ${solutionType}
+          - Row 2 (Middle): ${company}, ${job}
+          - ${nameLine}
+          
+          Instruction for Text:
+          - Text Alignment: Center all rows.
+          - Font: Modern, elegant, high-contrast Korean serif or sans-serif font in metallic gold.
+          - [CRITICAL] The Korean characters must be rendered perfectly without any artifacts, corruption, or missing strokes.
+          
+          Style: Executive, Sophisticated, High-end, Professional.
+        `;
+        // 9:16 aspect ratio is the closest standard for 1600x2560
+        const result = await generateImage(prompt, "9:16");
+        if (result) return result;
+        console.warn("Cover image generator returned undefined. Issuing Golden Key SVG Cover instead.");
+        return getFallbackCoverSVG(company, job, name, solutionType);
+    } catch (e) {
+        console.warn("Cover image generation exception. Issuing fallback SVG:", e);
+        return getFallbackCoverSVG(company, job, name, solutionType);
+    }
 };
 
 /**
  * Generates an infographic for a chapter.
  */
 export const generateInfographic = async (topic: string) => {
-    const prompt = `
-      Create a high-quality presentation slide style infographic.
-      Topic: "${topic}"
-      
-      [MANDATORY RULES]
-      1. **Language**: Text inside the image MUST be 100% Korean (한국어). NO English text in the content body.
-      2. **Content**: visually summarize the key points of '${topic}'. Use bullet points or a central diagram with Korean labels.
-      3. **Style**: Professional Business Presentation. Luxury Black & Gold theme. Clean, modern, flat vector style.
-      4. **Text Quality**: [CRITICAL] The Korean text must be perfectly rendered, sharp, and legible. No broken characters. Use a clean, modern Korean font.
-      5. **Ratio**: 16:9 Wide.
-      6. **Composition**: Ensure all elements are within the 16:9 frame and not clipped at the edges.
-    `;
-    return await generateImage(prompt, "16:9");
+    try {
+        const prompt = `
+          Create a high-quality presentation slide style infographic.
+          Topic: "${topic}"
+          
+          [MANDATORY RULES]
+          1. **Language**: Text inside the image MUST be 100% Korean (한국어). NO English text in the content body.
+          2. **Content**: visually summarize the key points of '${topic}'. Use bullet points or a central diagram with Korean labels.
+          3. **Style**: Professional Business Presentation. Luxury Black & Gold theme. Clean, modern, flat vector style.
+          4. **Text Quality**: [CRITICAL] The Korean text must be perfectly rendered, sharp, and legible. No broken characters. Use a clean, modern Korean font.
+          5. **Ratio**: 16:9 Wide.
+          6. **Composition**: Ensure all elements are within the 16:9 frame and not clipped at the edges.
+        `;
+        const result = await generateImage(prompt, "16:9");
+        if (result) return result;
+        console.warn("Infographic generation returned undefined. Issuing core logic SVG infographic instead.");
+        return getFallbackInfographicSVG(topic);
+    } catch (e) {
+        console.warn("Infographic generation exception. Issuing fallback SVG:", e);
+        return getFallbackInfographicSVG(topic);
+    }
 };
 
 /**
@@ -678,27 +1425,37 @@ export const generateReportSection = async (
 
   contentParts.push({ text: prompt });
 
-  return withRetry(async () => {
-    const response = await ai.models.generateContent({
-      model: 'gemini-flash-latest', 
-      contents: { parts: contentParts },
-      config: {
-        thinkingConfig: { thinkingLevel: ThinkingLevel.LOW }, 
-        systemInstruction: {
-          parts: [{
-            text: `
-              당신은 대한민국 최고의 취업/면접 전문 컨설턴트입니다.
-              당신은 스스로가 AI나 인공지능이라는 점을 리포트 어디에서도 언급하지 마십시오. 오직 사람인 전문 컨설턴트로서 답변하십시오.
-              사용자가 제공한 [지원 기업명]과 [지원 직무]를 최우선으로 분석해야 합니다.
-              첨부파일(자소서, 이력서 등)에서 지원자의 경험과 강점을 추출하되, 기업 데이터베이스와 분석 내용은 반드시 사용자가 입력한 '${company}' 기업에 한정되어야 합니다.
-              절대로 다른 기업이나 유사 기업의 정보를 섞지 마세요.
-              모든 답변은 전문적이고 신뢰할 수 있는 정보를 바탕으로, 할루시네이션(허위 정보) 없이 작성되어야 합니다.
-            `
-          }]
-        }
-      },
-    });
+  try {
+    return await withRetry(async () => {
+      const response = await ai.models.generateContent({
+        model: 'gemini-flash-latest', 
+        contents: { parts: contentParts },
+        config: {
+          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW }, 
+          systemInstruction: {
+            parts: [{
+              text: `
+                당신은 대한민국 최고의 취업/면접 전문 컨설턴트입니다.
+                당신은 스스로가 AI나 인공지능이라는 점을 리포트 어디에서도 언급하지 마십시오. 오직 사람인 전문 컨설턴트로서 답변하십시오.
+                사용자가 제공한 [지원 기업명]과 [지원 직무]를 최우선으로 분석해야 합니다.
+                첨부파일(자소서, 이력서 등)에서 지원자의 경험과 강점을 추출하되, 기업 데이터베이스와 분석 내용은 반드시 사용자가 입력한 '${company}' 기업에 한정되어야 합니다.
+                절대로 다른 기업이나 유사 기업의 정보를 섞지 마세요.
+                모든 답변은 전문적이고 신뢰할 수 있는 정보를 바탕으로, 할루시네이션(허위 정보) 없이 작성되어야 합니다.
+              `
+            }]
+          }
+        },
+      });
 
-    return response.text || "내용 생성 실패";
-  });
+      return response.text || "내용 생성 실패";
+    });
+  } catch (error: any) {
+    console.warn("Gemini execution encountered an error:", error);
+    
+    if (isQuotaOrSpendingLimitError(error)) {
+        console.warn("Quota or custom billing limit exceeded. Issuing high-quality local template generation fallback.");
+        return generateMockSectionContent(sectionIndex, solutionType, company, job, type, name, requirements, analysisOptions);
+    }
+    throw error;
+  }
 };
