@@ -18,6 +18,14 @@ export interface UserInputData {
   preTaskFile: File[];
   ptMaterialFile: File[];
   otherFiles: File[];
+  
+  // Custom Solution Fields
+  customSubTheme?: string;
+  customChapter1?: string;
+  customChapter2?: string;
+  customChapter3?: string;
+  customChapter4?: string;
+  customChapter5?: string;
 }
 
 export enum ProcessStep {

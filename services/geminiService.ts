@@ -966,7 +966,8 @@ export const generateReportSection = async (
   referenceLinks: string,
   targetPageCount: string,
   analysisOptions: string,
-  files: { resume: File[]; cover: File[]; notice: File[]; posting: File[]; preTask: File[]; ptMaterial: File[]; otherFiles: File[] }
+  files: { resume: File[]; cover: File[]; notice: File[]; posting: File[]; preTask: File[]; ptMaterial: File[]; otherFiles: File[] },
+  customChapters?: string[]
 ): Promise<string> => {
   
   const contentParts: any[] = [];
@@ -1268,40 +1269,46 @@ export const generateReportSection = async (
         break;
     }
   } else if (solutionType === "맞춤 솔루션") {
+    const chTitle1 = (customChapters && customChapters[0]) || "요청사항 및 첨부 서류 기반 핵심 분석";
+    const chTitle2 = (customChapters && customChapters[1]) || "요청사항 해결을 위한 구체적 실행 방안";
+    const chTitle3 = (customChapters && customChapters[2]) || "서류 심층(딥리서치) 분석을 통한 강점 및 보완점 도출";
+    const chTitle4 = (customChapters && customChapters[3]) || "예상 상황 및 대응 전략 (서류 문맥 내 딥리서치)";
+    const chTitle5 = (customChapters && customChapters[4]) || "딥리서치 최종 요약 및 맞춤형 넥스트 스텝 제언";
+
     switch (sectionIndex) {
       case 1:
         specificPrompt = `
-          1. 요청사항 및 첨부 서류 기반 핵심 분석 (딥리서치 활용)
+          1. ${chTitle1} (딥리서치 활용)
           - [매우 중요] 외부 정보나 일반적인 템플릿 사용을 엄격히 제한하며, 오직 사용자의 요청사항과 첨부된 서류(이력서, 자소서, 경험 등) 정보만을 기반으로 작성해야 합니다.
-          - 해당 서류와 요청사항 내용에 대해서만 Gemini의 딥리서치(Deep Research) 기능을 최대한 활용하여, 표면적인 텍스트를 넘어선 숨은 의미와 핵심 이슈를 심층적으로 진단하세요.
+          - 이 장의 대주제는 '${chTitle1}'입니다. 해당 서류와 요청사항 내용에 대해서만 Gemini의 딥리서치(Deep Research) 기능을 최대한 활용하여, 표면적인 텍스트를 넘어선 숨은 의미와 핵심 이슈를 심층적으로 진단하세요.
         `;
         break;
       case 2:
         specificPrompt = `
-          2. 요청사항 해결을 위한 구체적 실행 방안 (서류 기반 딥리서치)
+          2. ${chTitle2} (서류 기반 딥리서치)
           - [매우 중요] 반드시 사용자의 요청사항과 첨부된 서류 내용에 국한하여 딥리서치 수준의 심층 분석을 바탕으로 실무적이고 구체적인 맞춤 해결책을 제시하세요.
-          - 발견된 정보를 심도 있게 교차 분석하여, 현장에서 즉시 적용 가능한 단계별 액션 플랜을 도출하세요.
+          - 이 장의 대주제는 '${chTitle2}'입니다. 발견된 정보를 심도 있게 교차 분석하여, 현장에서 즉시 적용 가능한 단계별 액션 플랜을 도출하세요.
         `;
         break;
       case 3:
         specificPrompt = `
-          3. 서류 심층(딥리서치) 분석을 통한 강점 및 보완점 도출
+          3. ${chTitle3}
           - [매우 중요] 오직 제출된 서류 맥락 안에서 딥리서치를 수행하여, 요청사항 달성에 결정적인 영향을 미칠 본인만의 차별화 포인트와 강점을 분석하세요.
-          - 서류의 구조적, 논리적 취약점을 심층 분석하여 구체적 예시와 함께 논리정연한 개선 방향을 제시하세요.
+          - 이 장의 대주제는 '${chTitle3}'입니다. 서류의 구조적, 논리적 취약점을 심층 분석하여 구체적 예시와 함께 논리정연한 개선 방향을 제시하세요.
         `;
         break;
       case 4:
         specificPrompt = `
-          4. 예상 상황 및 대응 전략 (서류 문맥 내 딥리서치)
+          4. ${chTitle4}
           - [매우 중요] 외부 사례가 아닌, 오직 요청사항과 첨부 서류의 맥락 안에서만 도출될 수 있는 잠재적 리스크나 파생 상황을 딥리서치하여 도출하세요.
-          - 각 예상 상황별로 서류에 기재된 경험이나 역량을 어떻게 활용하고 응용하여 최적의 논리로 방어 및 대응할지 설명하세요.
+          - 이 장의 대주제는 '${chTitle4}'입니다. 각 예상 상황별로 서류에 기재된 경험이나 역량을 어떻게 활용하고 응용하여 최적의 논리로 방어 및 대응할지 설명하세요.
         `;
         break;
       case 5:
         specificPrompt = `
-          5. 딥리서치 최종 요약 및 맞춤형 넥스트 스텝 제언
+          5. ${chTitle5}
           - [매우 중요] 사용자의 요청사항 및 서류 내용을 한정적으로 기반하여 딥리서치한 분석 결과들을 종합, 최종 솔루션의 핵심 가치를 요약하세요.
-          - 앞으로의 실행을 위한 제언을 서류 내 구체적 맥락과 완벽히 일치하는 선에서 전문가적 통찰과 함께 가장 효과적으로 제언하세요.
+          - 이 장의 대주제는 '${chTitle5}'입니다. 앞으로의 실행을 위한 제언을 서류 내 구체적 맥락과 완벽히 일치하는 선에서 전문가적 통찰과 함께 가장 효과적으로 제언하세요.
         `;
         break;
     }
@@ -1428,19 +1435,21 @@ export const generateReportSection = async (
   try {
     return await withRetry(async () => {
       const response = await ai.models.generateContent({
-        model: 'gemini-flash-latest', 
+        model: 'gemini-3.1-pro-preview', 
         contents: { parts: contentParts },
         config: {
+          tools: [{ googleSearch: {} }],
           thinkingConfig: { thinkingLevel: ThinkingLevel.LOW }, 
           systemInstruction: {
             parts: [{
               text: `
                 당신은 대한민국 최고의 취업/면접 전문 컨설턴트입니다.
+                구글 딥리서치(Google Search Grounding)를 적극 활용하여, 해당 기업의 최신 동향, 사실 기반의 재무 정보, 최신 인재상 등을 면밀하게 조사한 뒤, 절대로 허위사실(할루시네이션) 없이 신빙성 있는 내용만을 작성해야 합니다.
                 당신은 스스로가 AI나 인공지능이라는 점을 리포트 어디에서도 언급하지 마십시오. 오직 사람인 전문 컨설턴트로서 답변하십시오.
                 사용자가 제공한 [지원 기업명]과 [지원 직무]를 최우선으로 분석해야 합니다.
                 첨부파일(자소서, 이력서 등)에서 지원자의 경험과 강점을 추출하되, 기업 데이터베이스와 분석 내용은 반드시 사용자가 입력한 '${company}' 기업에 한정되어야 합니다.
                 절대로 다른 기업이나 유사 기업의 정보를 섞지 마세요.
-                모든 답변은 전문적이고 신뢰할 수 있는 정보를 바탕으로, 할루시네이션(허위 정보) 없이 작성되어야 합니다.
+                모든 답변은 전문적이고 신뢰할 수 있는 정보를 바탕으로 작성되어야 합니다.
               `
             }]
           }

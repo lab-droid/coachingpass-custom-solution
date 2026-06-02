@@ -147,6 +147,12 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isProcessing }) 
     preTaskFile: [],
     ptMaterialFile: [],
     otherFiles: [],
+    customSubTheme: '',
+    customChapter1: '서류 기반 맞춤 분석 및 강점 추출',
+    customChapter2: '요청 사안의 맥락을 고려한 맞춤식 전략성 공략',
+    customChapter3: '돌발 상황 대비 및 압박 핵심 키워드 가이드',
+    customChapter4: '최종 맞춤 실천 로드맵 및 구체적 가이드라인',
+    customChapter5: '전문가 원스톱 피드백 및 파이널 레주메 총평',
   });
 
   const handleTextChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -302,6 +308,91 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isProcessing }) 
             </div>
         </div>
       </div>
+
+      {formData.solutionType === '맞춤 솔루션' && (
+        <div id="custom-solution-fields-section" className="mb-12 relative z-10 bg-amber-500/5 hover:bg-amber-500/10 transition-all border border-amber-500/30 rounded-2xl p-6 md:p-8 space-y-6 animate-fade-in">
+          <div className="flex items-center gap-2 pb-3 border-b border-white/10">
+            <span className="w-2.5 h-6 bg-gradient-to-b from-amber-300 to-amber-500 rounded-full"></span>
+            <h3 className="text-lg font-bold text-white">맞춤 솔루션 상세 추가 설정</h3>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-amber-400 mb-2 uppercase tracking-wider">
+              맞춤 솔루션 핵심 목표 / 대주제 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="customSubTheme"
+              required={formData.solutionType === '맞춤 솔루션'}
+              className="w-full px-5 py-4 bg-white/5 rounded-xl border border-white/10 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-white placeholder:text-slate-600 font-medium"
+              placeholder="예: 공공기관 핵심역량 정합성 도출 및 꼬리질문 철저 방어"
+              value={formData.customSubTheme || ''}
+              onChange={handleTextChange}
+            />
+            <span className="text-xs text-slate-500 block mt-1">이 맞춤 솔루션을 통해 도출하고자 하는 핵심적인 목적이나 가치를 기재해 주세요.</span>
+          </div>
+
+          <div className="space-y-4">
+            <label className="block text-sm font-bold text-amber-400 uppercase tracking-wider">
+              각 챕터별 맞춤 주제 지정 (5대 핵심 챕터)
+            </label>
+            <p className="text-xs text-slate-500 mb-2">원하시는 개별 챕터의 세부 주제를 직접 수정 및 커스터마이징하실 수 있습니다.</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5">챕터 1 주제</label>
+                <input
+                  type="text"
+                  name="customChapter1"
+                  className="w-full px-4 py-3 bg-white/5 rounded-lg border border-white/5 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-white text-sm"
+                  value={formData.customChapter1 || ''}
+                  onChange={handleTextChange}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5">챕터 2 주제</label>
+                <input
+                  type="text"
+                  name="customChapter2"
+                  className="w-full px-4 py-3 bg-white/5 rounded-lg border border-white/5 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-white text-sm"
+                  value={formData.customChapter2 || ''}
+                  onChange={handleTextChange}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5">챕터 3 주제</label>
+                <input
+                  type="text"
+                  name="customChapter3"
+                  className="w-full px-4 py-3 bg-white/5 rounded-lg border border-white/5 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-white text-sm"
+                  value={formData.customChapter3 || ''}
+                  onChange={handleTextChange}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5">챕터 4 주제</label>
+                <input
+                  type="text"
+                  name="customChapter4"
+                  className="w-full px-4 py-3 bg-white/5 rounded-lg border border-white/5 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-white text-sm"
+                  value={formData.customChapter4 || ''}
+                  onChange={handleTextChange}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5">챕터 5 주제</label>
+                <input
+                  type="text"
+                  name="customChapter5"
+                  className="w-full px-4 py-3 bg-white/5 rounded-lg border border-white/5 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-white text-sm"
+                  value={formData.customChapter5 || ''}
+                  onChange={handleTextChange}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mb-12 relative z-10">
         <label className="block text-sm font-bold text-amber-500 mb-2 uppercase tracking-wider">요청사항 (Requirements)</label>

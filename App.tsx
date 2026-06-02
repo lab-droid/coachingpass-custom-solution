@@ -7,7 +7,11 @@ import { generateReportSection, generateCoverImage, generateInfographic } from '
 import { downloadAsWord, copyToGoogleDocs } from './services/documentService';
 import { TaskState, TaskProgress } from './types';
 
-const getInitialTasks = (solutionType: string, includeCover: boolean, includeBody: boolean): TaskProgress[] => {
+const getInitialTasks = (data: UserInputData): TaskProgress[] => {
+    const solutionType = data.solutionType;
+    const includeCover = data.includeCoverImage;
+    const includeBody = data.includeBodyImages;
+
     const getLabels = (type: string) => {
         if (type === "진로 맞춤 솔루션") {
             return [
@@ -67,11 +71,11 @@ const getInitialTasks = (solutionType: string, includeCover: boolean, includeBod
             ];
         } else if (type === "맞춤 솔루션") {
             return [
-                "맞춤솔루션 제작 1",
-                "맞춤솔루션 제작 2",
-                "맞춤솔루션 제작 3",
-                "맞춤솔루션 제작 4",
-                "맞춤솔루션 제작 5"
+                data.customChapter1 || "맞춤솔루션 제작 1",
+                data.customChapter2 || "맞춤솔루션 제작 2",
+                data.customChapter3 || "맞춤솔루션 제작 3",
+                data.customChapter4 || "맞춤솔루션 제작 4",
+                data.customChapter5 || "맞춤솔루션 제작 5"
             ];
         } else {
             return [
@@ -201,7 +205,7 @@ const App: React.FC = () => {
 
     setUserData(data);
     setStep(ProcessStep.ANALYZING);
-    setTasks(getInitialTasks(data.solutionType, data.includeCoverImage, data.includeBodyImages));
+    setTasks(getInitialTasks(data));
 
     try {
       // Parallel generation phase
@@ -288,11 +292,11 @@ const App: React.FC = () => {
               ];
           } else if (type === "맞춤 솔루션") {
               return [
-                  "맞춤솔루션 제작 1",
-                  "맞춤솔루션 제작 2",
-                  "맞춤솔루션 제작 3",
-                  "맞춤솔루션 제작 4",
-                  "맞춤솔루션 제작 5"
+                  data.customChapter1 || "맞춤솔루션 제작 1",
+                  data.customChapter2 || "맞춤솔루션 제작 2",
+                  data.customChapter3 || "맞춤솔루션 제작 3",
+                  data.customChapter4 || "맞춤솔루션 제작 4",
+                  data.customChapter5 || "맞춤솔루션 제작 5"
               ];
           } else {
               return [
@@ -307,16 +311,40 @@ const App: React.FC = () => {
 
       const topics = getInfographicTopics(data.solutionType);
 
+      let effectiveRequirements = data.requirements;
+      let effectiveAnalysisOptions = data.analysisOptions;
+      let customChapters: string[] | undefined = undefined;
+
+      if (data.solutionType === "맞춤 솔루션") {
+          const customGoal = data.customSubTheme ? `[맞춤 솔루션 핵심 목표 및 대주제]: ${data.customSubTheme}` : "";
+          customChapters = [
+              data.customChapter1 || "서류 기반 맞춤 분석 및 강점 추출",
+              data.customChapter2 || "요청 사안의 맥락을 고려한 맞춤식 전략성 공략",
+              data.customChapter3 || "돌발 상황 대비 및 압박 핵심 키워드 가이드",
+              data.customChapter4 || "최종 맞춤 실천 로드맵 및 구체적 가이드라인",
+              data.customChapter5 || "전문가 원스톱 피드백 및 파이널 레주메 총평"
+          ];
+          const customChaptersText = `[5대 핵심 챕터 맞춤 세부 주제 구성안]:
+- 챕터 1: ${customChapters[0]}
+- 챕터 2: ${customChapters[1]}
+- 챕터 3: ${customChapters[2]}
+- 챕터 4: ${customChapters[3]}
+- 챕터 5: ${customChapters[4]}`;
+          
+          effectiveRequirements = `${effectiveRequirements ? effectiveRequirements + "\n\n" : ""}${customGoal}\n${customChaptersText}`;
+          effectiveAnalysisOptions = `${effectiveAnalysisOptions ? effectiveAnalysisOptions + "\n\n" : ""}[맞춤 설계 테마]: ${data.customSubTheme || '개인 자율 설정형'}`;
+      }
+
       const [
           section1, section2, section3, section4, section5,
           coverImage,
           img1, img2, img3, img4, img5
       ] = await Promise.all([
-          runTask('section1', () => generateReportSection(1, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext)),
-          runTask('section2', () => generateReportSection(2, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext)),
-          runTask('section3', () => generateReportSection(3, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext)),
-          runTask('section4', () => generateReportSection(4, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext)),
-          runTask('section5', () => generateReportSection(5, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, data.requirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, data.analysisOptions, fileContext)),
+          runTask('section1', () => generateReportSection(1, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, effectiveRequirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, effectiveAnalysisOptions, fileContext, customChapters)),
+          runTask('section2', () => generateReportSection(2, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, effectiveRequirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, effectiveAnalysisOptions, fileContext, customChapters)),
+          runTask('section3', () => generateReportSection(3, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, effectiveRequirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, effectiveAnalysisOptions, fileContext, customChapters)),
+          runTask('section4', () => generateReportSection(4, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, effectiveRequirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, effectiveAnalysisOptions, fileContext, customChapters)),
+          runTask('section5', () => generateReportSection(5, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, effectiveRequirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, effectiveAnalysisOptions, fileContext, customChapters)),
           data.includeCoverImage 
             ? runTask('cover', () => generateCoverImage(data.companyName, data.jobTitle, data.studentName, data.solutionType))
             : Promise.resolve(undefined),
@@ -388,7 +416,27 @@ const App: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center space-x-3 group cursor-pointer" onClick={() => window.location.reload()}>
             <div className="w-10 h-10 bg-gradient-to-br from-amber-200 to-amber-600 rounded-xl flex items-center justify-center text-black group-hover:scale-105 transition-transform duration-300 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-                <span className="font-extrabold text-xl tracking-tighter mix-blend-color-burn">CP</span>
+                <svg className="w-6 h-6 text-black/90 mix-blend-color-burn" viewBox="0 0 512 512" fill="none" stroke="currentColor">
+                  {/* Outer Bow Circle (Tuner Ring) */}
+                  <circle cx="180" cy="256" r="65" stroke="currentColor" strokeWidth="18" fill="none" />
+                  
+                  {/* Slider Track and Knob inside Bow */}
+                  <line x1="145" y1="256" x2="215" y2="256" stroke="currentColor" strokeWidth="10" strokeLinecap="round" />
+                  <circle cx="195" cy="256" r="15" fill="currentColor" />
+                  
+                  {/* Anchors on dial */}
+                  <line x1="180" y1="168" x2="180" y2="178" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
+                  <line x1="180" y1="334" x2="180" y2="344" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
+                  <line x1="115" y1="256" x2="125" y2="256" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
+
+                  {/* Key Shaft */}
+                  <line x1="240" y1="256" x2="400" y2="256" stroke="currentColor" strokeWidth="18" strokeLinecap="round" />
+                  
+                  {/* Key Teeth as Bar Chart */}
+                  <rect x="295" y="256" width="18" height="35" rx="6" fill="currentColor" />
+                  <rect x="330" y="256" width="18" height="55" rx="6" fill="currentColor" />
+                  <rect x="365" y="256" width="18" height="25" rx="6" fill="currentColor" />
+                </svg>
             </div>
             <div className="flex flex-col">
                 <h1 className="text-xl font-extrabold text-white tracking-tight leading-none">코칭패스 맞춤 솔루션</h1>
