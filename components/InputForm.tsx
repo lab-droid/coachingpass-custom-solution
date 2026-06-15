@@ -261,12 +261,9 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isProcessing }) 
                     onChange={handleTextChange as any}
                 >
                     <option value="AI 추천" className="bg-[#1a1a1a] text-white">AI 추천 (자동 최적화)</option>
-                    <option value="20" className="bg-[#1a1a1a] text-white">20페이지</option>
-                    <option value="30" className="bg-[#1a1a1a] text-white">30페이지</option>
-                    <option value="50" className="bg-[#1a1a1a] text-white">50페이지</option>
-                    <option value="70" className="bg-[#1a1a1a] text-white">70페이지</option>
-                    <option value="80" className="bg-[#1a1a1a] text-white">80페이지</option>
-                    <option value="100" className="bg-[#1a1a1a] text-white">100페이지</option>
+                    <option value="30~50장" className="bg-[#1a1a1a] text-white">30장 ~ 50장</option>
+                    <option value="50~100장" className="bg-[#1a1a1a] text-white">50장 ~ 100장</option>
+                    <option value="100~150장" className="bg-[#1a1a1a] text-white">100장 ~ 150장</option>
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-amber-500">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>

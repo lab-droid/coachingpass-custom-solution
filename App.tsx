@@ -135,6 +135,7 @@ const App: React.FC = () => {
   const [errorDetails, setErrorDetails] = useState<{ message: string; advice: string } | null>(null);
   const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
   const [keyInput, setKeyInput] = useState('');
+  const [revisionNote, setRevisionNote] = useState('');
 
   useEffect(() => {
     checkApiKey();
@@ -199,6 +200,22 @@ const App: React.FC = () => {
     });
     setUserData(null);
     setErrorDetails(null);
+    setRevisionNote('');
+  };
+
+  // 다시 만들기 — 기존 입력(첨부 서류 포함)을 유지하고, 사용자가 입력한
+  // 추가 보완 요청사항을 요청사항에 덧붙여 솔루션 전체를 재생성한다.
+  const handleRegenerate = async () => {
+    if (!userData) return;
+    const note = revisionNote.trim();
+    const augmentedData: UserInputData = {
+      ...userData,
+      requirements: note
+        ? `${userData.requirements ? userData.requirements + "\n\n" : ""}[다시 만들기 — 추가 보완 요청사항 (반드시 반영하여 보완·개선)]: ${note}`
+        : userData.requirements,
+    };
+    setRevisionNote('');
+    await handleStartAnalysis(augmentedData);
   };
 
   const handleStartAnalysis = async (data: UserInputData) => {
@@ -635,12 +652,41 @@ const App: React.FC = () => {
                 >
                     구글Docs로 복사하기
                 </button>
-                <button 
+                <button
                     onClick={handleRestart}
                     className="w-full md:w-auto px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-white font-bold transition-all transform hover:scale-105 active:scale-95"
                 >
                     다시 시작하기
                 </button>
+             </div>
+
+             {/* 다시 만들기 (보완 요청 후 재생성) */}
+             <div className="mt-12 pt-10 border-t border-white/10 max-w-2xl mx-auto text-left">
+                <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                    <span className="w-2 h-6 bg-amber-500 rounded-full"></span>
+                    솔루션 수정 / 다시 만들기
+                </h3>
+                <p className="text-sm text-slate-400 mb-4">
+                    결과물에서 보완하거나 수정하고 싶은 부분을 아래에 구체적으로 작성한 뒤 <strong className="text-amber-400">[다시 만들기]</strong>를 누르면, 기존 입력 정보와 첨부 서류를 유지한 채 요청을 반영하여 솔루션을 다시 생성합니다.
+                </p>
+                <textarea
+                    value={revisionNote}
+                    onChange={(e) => setRevisionNote(e.target.value)}
+                    placeholder="예: 3챕터 예상질문을 더 압박형으로 보강해주세요 / 자소서 경험을 더 구체적으로 인용해주세요 / 전체적으로 더 자신감 있는 어조로 바꿔주세요"
+                    className="w-full px-5 py-4 bg-white/5 rounded-xl border border-white/10 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-white placeholder:text-slate-600 font-medium min-h-[100px] resize-y"
+                />
+                <button
+                    onClick={handleRegenerate}
+                    className="w-full mt-4 px-8 py-4 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 rounded-xl text-black font-extrabold transition-all transform hover:-translate-y-0.5 active:scale-95 shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    보완하여 다시 만들기
+                </button>
+                <p className="text-xs text-slate-500 mt-3 text-center">
+                    ※ 보완 요청을 비워두면 동일 조건으로 새로 생성됩니다. 다시 만들기 시 현재 결과물은 새 결과물로 대체됩니다.
+                </p>
              </div>
           </div>
         )}
