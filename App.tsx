@@ -4,7 +4,7 @@ import { InputForm } from './components/InputForm';
 import { ProcessVisualizer } from './components/ProcessVisualizer';
 import { ProcessStep, UserInputData, GeneratedContent } from './types';
 import { generateReportSection, generateCoverImage, generateInfographic } from './services/geminiService';
-import { downloadAsWord, copyToGoogleDocs } from './services/documentService';
+import { downloadAsWord, copyToGoogleDocs, exportToPdf } from './services/documentService';
 import { TaskState, TaskProgress } from './types';
 
 const getInitialTasks = (data: UserInputData): TaskProgress[] => {
@@ -612,13 +612,19 @@ const App: React.FC = () => {
              )}
 
              <div className="flex flex-col md:flex-row items-center justify-center gap-4 flex-wrap">
-                <button 
+                <button
                     onClick={() => downloadAsWord(content, userData!)}
                     className="w-full md:w-auto px-8 py-4 bg-amber-600 hover:bg-amber-500 rounded-xl text-white font-bold transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-amber-600/20"
                 >
                     솔루션 다운로드 (.doc)
                 </button>
-                <button 
+                <button
+                    onClick={() => exportToPdf(content, userData!)}
+                    className="w-full md:w-auto px-8 py-4 bg-rose-600 hover:bg-rose-500 rounded-xl text-white font-bold transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-rose-600/20"
+                >
+                    PDF로 저장하기
+                </button>
+                <button
                     onClick={() => copyToGoogleDocs(content, userData!)}
                     className="w-full md:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 rounded-xl text-white font-bold transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-blue-600/20"
                 >
