@@ -260,10 +260,10 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isProcessing }) 
                     value={formData.targetPageCount}
                     onChange={handleTextChange as any}
                 >
-                    <option value="AI 추천" className="bg-[#1a1a1a] text-white">AI 추천 (자동 최적화)</option>
-                    <option value="30~50장" className="bg-[#1a1a1a] text-white">30장 ~ 50장</option>
-                    <option value="50~100장" className="bg-[#1a1a1a] text-white">50장 ~ 100장</option>
-                    <option value="100~150장" className="bg-[#1a1a1a] text-white">100장 ~ 150장</option>
+                    <option value="AI 추천" className="bg-[#1a1a1a] text-white">AI 추천 (최소 50장 이상 자동 최적화)</option>
+                    <option value="50~80장" className="bg-[#1a1a1a] text-white">50장 ~ 80장</option>
+                    <option value="80~120장" className="bg-[#1a1a1a] text-white">80장 ~ 120장</option>
+                    <option value="120~150장" className="bg-[#1a1a1a] text-white">120장 ~ 150장</option>
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-amber-500">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>

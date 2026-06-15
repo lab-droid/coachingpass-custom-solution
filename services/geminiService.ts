@@ -1382,7 +1382,7 @@ export const generateReportSection = async (
   // 목표 분량 파싱 — "30~50장" 같은 범위형, "50" 같은 단일값, "AI 추천" 모두 지원.
   const isAiRecommended = targetPageCount === 'AI 추천';
   let minTotalPages = 50;
-  let maxTotalPages = 50;
+  let maxTotalPages = 80;
   if (!isAiRecommended) {
     const nums = (targetPageCount.match(/\d+/g) || []).map(Number);
     if (nums.length >= 2) {
@@ -1392,8 +1392,11 @@ export const generateReportSection = async (
       minTotalPages = maxTotalPages = nums[0];
     }
   }
-  const minPagesPerSection = Math.max(1, Math.floor(minTotalPages / 5));
-  const maxPagesPerSection = Math.max(minPagesPerSection + 1, Math.ceil(maxTotalPages / 5));
+  // [필수] 결과물 전체 분량은 어떤 경우에도 최소 50페이지 이상이어야 한다.
+  minTotalPages = Math.max(minTotalPages, 50);
+  maxTotalPages = Math.max(maxTotalPages, minTotalPages);
+  const minPagesPerSection = Math.max(10, Math.floor(minTotalPages / 5));
+  const maxPagesPerSection = Math.max(minPagesPerSection + 2, Math.ceil(maxTotalPages / 5));
 
   // 현재 날짜 (최신 정보 기준점)
   const todayStr = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -1428,7 +1431,7 @@ ${prevContextBlock}
     - [딥리서치 및 신뢰성 — 허위 금지] 허위내용(할루시네이션)이 절대 없도록 구글 검색 기반 심층 리서치(Deep Research)를 수행하여 검증되고 신뢰성 있는 정보만을 논리적으로 작성하세요. 확인되지 않은 추측, 지어낸 수치·사실·인용은 절대 작성하지 마세요.
     - [최신 정보 기준] 오늘 날짜는 ${todayStr} 입니다. 모든 기업 정보·산업 동향·채용 정보·통계는 이 시점 기준으로 가장 최신화된 사실이어야 하며, 오래되었거나 변경된 정보를 쓰지 마세요.
     ${trimmedRequirements
-      ? `- [요청사항 100% 반영 — 최우선 절대 원칙] 사용자가 초기 단계에서 직접 기재한 아래 요청사항은 어떠한 경우에도 솔루션 내용에 100% 직접 반영되어야 하며, 절대로 누락하거나 형식적으로만 다루어서는 안 됩니다.\n      사용자 요청사항: "${trimmedRequirements}"\n      - 위 요청사항의 취지를 각 섹션의 분석/전략 내용 속에 구체적으로 녹여내고, 요청사항과 직접 관련된 핵심 문장은 반드시 노란색 배경 강조(<span style="background-color:yellow; color:black;">...</span>)로 표시하여 결과물에서 요청사항 반영 여부가 명확히 드러나도록 하세요.`
+      ? `- [요청사항 정밀 분석 및 100% 반영 — 최우선 절대 원칙] 사용자가 직접 기재한 아래 요청사항을 먼저 정밀하게 분석(핵심 의도·세부 요구·우선순위 파악)한 뒤, 그 분석 결과를 솔루션 내용에 100% 직접 반영해야 합니다. 요청사항과 관련된 내용은 무조건 결과물에 포함되어야 하며, 누락하거나 형식적으로만 다루는 것은 절대 금지입니다.\n      사용자 요청사항: "${trimmedRequirements}"\n      - 요청사항의 각 항목을 구체적인 분석·전략·예시로 풀어내고, 관련 핵심 문장은 반드시 노란색 배경 강조(<span style="background-color:yellow; color:black;">...</span>)로 표시하여 요청사항이 충실히 반영되었음이 결과물에서 명확히 드러나도록 하세요.`
       : `- [요청사항] 특별한 요청사항 없음`}
 
     [들어가면 절대 안되는 내용 (Forbidden Content)]
@@ -1463,12 +1466,10 @@ ${prevContextBlock}
 
     4. **가독성 (줄바꿈 필수)**: 텍스트의 가독성을 극대화하기 위해 글이 이어지지 않도록 **2~3줄마다 반드시 문단을 나누고(줄바꿈), 문단 사이에는 한 줄 띄어쓰기(<br><br>)**를 적용하여 여백을 확보하세요.
     5. **전문성**: 냉철하고 분석적인 어조.
-    6. **분량 (필수 준수 — 목표 범위 내 반드시 작성)**: ${isAiRecommended
-        ? '전체 리포트 분량은 AI가 분석 내용의 중요도에 따라 최적의 분량으로 자동 추천하여 작성합니다. (최소 30장 이상의 고퀄리티 지향)'
-        : `전체 리포트의 목표 분량은 **A4 ${minTotalPages}장 ~ ${maxTotalPages}장 (범위)**입니다. 완성된 전체 리포트(5개 챕터 합산)는 반드시 이 ${minTotalPages}~${maxTotalPages}장 범위 안에 들어와야 하며, 범위를 벗어나(미달 또는 초과) 작성하는 것을 엄격히 금지합니다.`}
-       - 현재 작성 중인 이 섹션은 전체의 1/5 분량을 담당하므로, **A4 ${minPagesPerSection}장 ~ ${maxPagesPerSection}장** 분량을 반드시 충족해야 합니다. (이 섹션만으로 분량 범위를 절대 벗어나지 마세요.)
-       - 내용을 극도로 상세하게 풀어서 작성하고, 필요하다면 구체적인 사례, 단계별 가이드, 심층 분석 내용을 추가하여 목표 분량 범위를 반드시 채우세요.
-       - 분량이 부족하면 합격 솔루션으로서의 가치가 떨어지고, 과도하게 초과하면 가독성이 떨어집니다. 반드시 지정된 분량 범위 내에서 밀도 있게 작성하는 것이 핵심입니다.
+    6. **분량 (절대 준수 — 최소 50장 이상 필수)**: 완성된 전체 리포트(5개 챕터 합산)는 **어떤 경우에도 최소 A4 50장 이상**이어야 하며, 목표 범위는 **A4 ${minTotalPages}장 ~ ${maxTotalPages}장**입니다. 50장 미만으로 작성하는 것은 절대 금지이며, 분량 미달 시 솔루션은 불합격 처리됩니다.
+       - 현재 작성 중인 이 섹션은 전체의 1/5 분량을 담당하므로, **이 섹션 하나만으로도 반드시 A4 ${minPagesPerSection}장 이상(${minPagesPerSection}~${maxPagesPerSection}장)** 분량을 충족해야 합니다. 절대 이보다 짧게 끝내지 마세요.
+       - 각 소주제(<h3>)마다 충분한 설명, 구체적 사례, 단계별 가이드, 수치·데이터, 표(<table>), 심층 분석을 풍부하게 넣어 분량을 확실히 채우세요. 한두 문장으로 항목을 끝내지 말고, 각 항목을 깊고 길게 전개하세요.
+       - 내용이 부족하다고 느껴지면 즉시 추가 사례, 추가 질문, 추가 전략, 추가 표를 덧붙여서라도 반드시 최소 분량을 채우십시오. 분량 부족은 어떤 이유로도 용납되지 않습니다.
     7. **표(Table) 사용 필수**: 아래와 같은 구조적 데이터는 반드시 표준 HTML <table> 태그를 사용하여 작성하세요. 마크다운 표(|---|)는 절대 사용하지 마세요.
        - 데이터 비교, 장단점 분석, 타임라인/로드맵, 체크리스트, 예상 질문/답변 리스트 등.
        - <table>, <thead>, <tbody>, <tr>, <th>, <td> 태그를 사용하고, 별도의 CSS 스타일 속성은 넣지 마세요.
@@ -1491,7 +1492,10 @@ ${prevContextBlock}
         contents: { parts: contentParts },
         config: {
           tools: [{ googleSearch: {} }],
-          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW }, 
+          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+          // 충분한 분량(섹션당 약 10페이지 이상)을 확보하기 위해 출력 토큰 상한을 크게 설정.
+          // 미설정 시 기본 한도에서 잘려 결과물 분량이 크게 부족해진다.
+          maxOutputTokens: 32768,
           systemInstruction: {
             parts: [{
               text: `
