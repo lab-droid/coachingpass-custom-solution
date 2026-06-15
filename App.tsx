@@ -133,6 +133,8 @@ const App: React.FC = () => {
   const [hasApiKey, setHasApiKey] = useState(false);
   const [isUsingCustomKey, setIsUsingCustomKey] = useState(false);
   const [errorDetails, setErrorDetails] = useState<{ message: string; advice: string } | null>(null);
+  const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
+  const [keyInput, setKeyInput] = useState('');
 
   useEffect(() => {
     checkApiKey();
@@ -158,32 +160,35 @@ const App: React.FC = () => {
       try {
         await window.aistudio.openSelectKey();
         await checkApiKey();
+        return;
       } catch (e) {
         console.warn("AI Studio key manager error, falling back to manual entry:", e);
-        promptManualKey();
       }
-    } else {
-      promptManualKey();
     }
+    openManualKeyModal();
   };
 
-  const promptManualKey = async () => {
-    const currentKey = localStorage.getItem('CUSTOM_GEMINI_API_KEY') || '';
-    const input = prompt(
-      '사용하실 Google Gemini API Key를 입력해주세요.\n\n(입력한 API 키는 브라우저 로컬 스토리지에만 보관됩니다. 미입력 시 시스템 기본 공용 API 키가 사용됩니다.)',
-      currentKey
-    );
-    if (input !== null) {
-      const trimmed = input.trim();
-      if (trimmed) {
-        localStorage.setItem('CUSTOM_GEMINI_API_KEY', trimmed);
-        alert('API Key가 로컬에 안전하게 저장되었습니다!');
-      } else {
-        localStorage.removeItem('CUSTOM_GEMINI_API_KEY');
-        alert('로컬 API Key가 초기화되었습니다. 기본 키가 사용됩니다.');
-      }
-      await checkApiKey();
+  const openManualKeyModal = () => {
+    setKeyInput(localStorage.getItem('CUSTOM_GEMINI_API_KEY') || '');
+    setIsKeyModalOpen(true);
+  };
+
+  const handleSaveKey = async () => {
+    const trimmed = keyInput.trim();
+    if (trimmed) {
+      localStorage.setItem('CUSTOM_GEMINI_API_KEY', trimmed);
+    } else {
+      localStorage.removeItem('CUSTOM_GEMINI_API_KEY');
     }
+    setIsKeyModalOpen(false);
+    await checkApiKey();
+  };
+
+  const handleClearKey = async () => {
+    localStorage.removeItem('CUSTOM_GEMINI_API_KEY');
+    setKeyInput('');
+    setIsKeyModalOpen(false);
+    await checkApiKey();
   };
 
   const handleRestart = () => {
@@ -690,6 +695,60 @@ const App: React.FC = () => {
       <footer className="text-center py-10 text-slate-600 text-sm border-t border-white/5">
         &copy; {new Date().getFullYear()} 코칭패스. 모든 권리 보유.
       </footer>
+
+      {/* API Key Modal (replaces native prompt(), which is blocked inside iframes/previews) */}
+      {isKeyModalOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in"
+          onClick={() => setIsKeyModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-md bg-[#141414] border border-white/10 rounded-2xl shadow-2xl p-7"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2.5 mb-2">
+              <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+              <h3 className="text-lg font-extrabold text-white">개인 Gemini API Key 등록</h3>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed mb-5">
+              입력한 API 키는 브라우저 로컬 스토리지에만 저장됩니다. 미입력 시 시스템 기본 공용 API 키가 사용됩니다.
+            </p>
+            <input
+              type="password"
+              autoFocus
+              value={keyInput}
+              onChange={(e) => setKeyInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSaveKey(); }}
+              placeholder="AIza... 형식의 Gemini API Key를 붙여넣으세요"
+              className="w-full px-4 py-3 rounded-xl bg-black/50 border border-white/10 text-slate-100 text-sm placeholder:text-slate-600 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40 transition-all"
+            />
+            <div className="flex items-center justify-between gap-3 mt-6">
+              <button
+                onClick={handleClearKey}
+                className="text-xs font-semibold text-slate-400 hover:text-red-400 transition-colors"
+              >
+                저장된 키 삭제
+              </button>
+              <div className="flex items-center gap-2.5">
+                <button
+                  onClick={() => setIsKeyModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 font-bold text-sm transition-all active:scale-95"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleSaveKey}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 text-black font-extrabold text-sm transition-all active:scale-95 shadow-md"
+                >
+                  저장하기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

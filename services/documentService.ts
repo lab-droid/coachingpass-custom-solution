@@ -289,6 +289,7 @@ const buildCoverPage = (content: GeneratedContent, userData: UserInputData) => {
 
 const buildBodyContent = (content: GeneratedContent, userData: UserInputData) => {
     const chapters = getChapterTitles(userData.solutionType);
+    const year = new Date().getFullYear();
     return `
     <div class="content-body">
       ${getBodySectionHTML(chapters[0], content.section1, content.section1Image)}
@@ -306,10 +307,11 @@ const buildBodyContent = (content: GeneratedContent, userData: UserInputData) =>
       ${getBodySectionHTML(chapters[4], content.section5, content.section5Image)}
 
       <div class="footer-notice">
-         <p>본 솔루션은 코칭패스의 전문성 있는 코치진과 컨설턴트가 함께 제작한 프리미엄 합격 솔루션입니다.</p>
-         <p>사용된 모든 개인정보 및 서류 데이터는 솔루션 생성 즉시 시스템에서 영구 파기되었습니다.</p>
-         <p>해당 솔루션의 모든 저작권은 합격의 열쇠 코칭패스에 있으며, 외부 유포를 금합니다.</p>
-         <p>Copyright © 코칭패스. 모든 권리 보유.</p>
+         <p style="font-weight:bold; color:#d4af37; font-size:11.5pt; letter-spacing:1px; margin-bottom:12px;">합격의 열쇠, 코칭패스 &middot; CoachingPass</p>
+         <p>본 솔루션은 코칭패스의 전문 코치진과 컨설턴트가 수험자 한 분만을 위해 1:1로 정밀 설계·제작한 프리미엄 합격 전략 자료입니다.</p>
+         <p><strong>[개인정보 보호]</strong> 분석에 사용된 모든 개인정보와 제출 서류는 「개인정보 보호법」에 따라 솔루션 생성 직후 시스템에서 즉시·영구 파기되었으며, 어떠한 형태로도 별도 저장·공유·재사용되지 않습니다.</p>
+         <p><strong>[저작권 및 이용 제한]</strong> 본 문서의 모든 콘텐츠와 그에 관한 일체의 지식재산권(2차적 저작물 작성권 포함)은 코칭패스에 귀속됩니다. 사전 서면 동의 없는 복제·배포·전송·게시·캡처·상업적 이용 및 제3자 양도를 일절 금하며, 위반 시 저작권법 등 관련 법령에 따라 민·형사상 책임이 따를 수 있습니다.</p>
+         <p style="margin-top:14px; font-weight:bold; color:#333;">Copyright &copy; ${year} CoachingPass. All Rights Reserved.</p>
       </div>
     </div>
   `;
@@ -328,7 +330,9 @@ const PAGE_STYLES = `
         div.CoverPage {
             page: CoverPage;
             width: 100%;
-            height: 100%;
+            height: 100vh;
+            max-height: 100vh;
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -360,8 +364,9 @@ const PAGE_STYLES = `
         }
 
         .cover-img {
-            width: 100%;
             max-width: 100%;
+            max-height: 100vh;
+            width: auto;
             height: auto;
             display: block;
             margin: 0 auto;
@@ -435,71 +440,116 @@ export const downloadAsWord = (content: GeneratedContent, userData: UserInputDat
   URL.revokeObjectURL(url);
 };
 
+// CSS for the in-page print layer. Scoped under #pdf-print-root so it never
+// affects the app on screen, and gated behind @media print so the report is
+// the only thing that appears in the printout / PDF.
+const buildPrintCss = (rootId: string): string => `
+  @media screen { #${rootId} { display: none !important; } }
+  @media print {
+    @page { size: A4; margin: 1in; }
+    @page CoverPage { size: A4; margin: 0; }
+    html, body { background: #fff !important; }
+    /* Hide the whole app, show only the report layer. */
+    body > *:not(#${rootId}) { display: none !important; }
+    #${rootId} {
+      display: block !important;
+      position: static !important;
+      font-family: 'Malgun Gothic', 'Dotum', sans-serif;
+      line-height: 1.6;
+      color: #000;
+      background: #fff;
+    }
+    #${rootId} div.CoverPage {
+      page: CoverPage;
+      width: 100%;
+      height: 100vh;
+      max-height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      page-break-after: always;
+    }
+    #${rootId} .section-break { page-break-before: always; }
+    #${rootId} h1 { font-size: 20pt; font-weight: bold; color: #d4af37; border-bottom: 2px solid #000; padding-bottom: 10px; margin-top: 40px; margin-bottom: 20px; }
+    #${rootId} h2 { color: #000; }
+    #${rootId} h3 { font-size: 13pt; font-weight: bold; color: #1e40af; margin-top: 20px; margin-bottom: 5px; }
+    #${rootId} p { margin-bottom: 10px; font-size: 11pt; text-align: justify; }
+    #${rootId} .infographic { width: 100%; max-width: 6.5in; height: auto; margin-bottom: 20px; border: 1px solid #ddd; }
+    /* Fit the cover within a single A4 page regardless of aspect ratio. */
+    #${rootId} .cover-img { max-width: 100%; max-height: 100vh; width: auto; height: auto; object-fit: contain; display: block; margin: 0 auto; }
+    #${rootId} .footer-notice { margin-top: 100px; text-align: center; font-size: 10pt; color: #666; border-top: 1px solid #ccc; padding-top: 20px; }
+    #${rootId} table { border-collapse: collapse; width: 100%; margin: 20px 0; border: 1px solid #000; }
+    #${rootId} th { background-color: #f3f4f6; font-weight: bold; text-align: center; border: 1px solid #000; padding: 8px; font-size: 10pt; }
+    #${rootId} td { border: 1px solid #000; padding: 8px; vertical-align: top; font-size: 10pt; }
+  }
+`;
+
 // ---------------------------------------------------------------------------
-// PDF export — opens a print-optimized window and triggers the browser's
-// "Save as PDF". This handles Korean fonts, embedded images, page breaks and
-// tables natively, with no extra dependency.
+// PDF export — injects a print-only layer into the current page and triggers
+// the browser's print dialog ("Save as PDF"). Printing the top-level window
+// (instead of a popup or iframe) is the most compatible approach and is not
+// blocked by sandboxed preview panes. Handles Korean fonts, embedded images,
+// page breaks and tables natively, with no extra dependency.
 // ---------------------------------------------------------------------------
 export const exportToPdf = (content: GeneratedContent, userData: UserInputData) => {
-  const filename = sanitizeFilename(`코칭패스 ${userData.solutionType}_${userData.companyName}_${userData.jobTitle}_${userData.studentName}`);
+  const ROOT_ID = 'pdf-print-root';
+  const STYLE_ID = 'pdf-print-style';
 
   const coverPage = buildCoverPage(content, userData);
   const bodyContent = buildBodyContent(content, userData);
 
-  const printHTML = `
-    <!DOCTYPE html>
-    <html lang="ko">
-    <head>
-      <meta charset="utf-8">
-      <title>${filename}</title>
-      <style>
-        ${PAGE_STYLES}
-        html, body { margin: 0; padding: 0; }
-        /* Apply page margins to the flowing content (cover keeps full bleed). */
-        .content-body { padding: 1in; }
-        @media print {
-          .content-body { padding: 0; }
-        }
-      </style>
-    </head>
-    <body>
-      ${coverPage}
-      ${bodyContent}
-    </body>
-    </html>
-  `;
+  // Remove any leftovers from a previous (interrupted) export.
+  document.getElementById(ROOT_ID)?.remove();
+  document.getElementById(STYLE_ID)?.remove();
 
-  const printWindow = window.open('', '_blank');
-  if (!printWindow) {
-    alert('팝업이 차단되어 PDF 창을 열 수 없습니다. 브라우저의 팝업 차단을 해제한 후 다시 시도해 주세요.');
-    return;
-  }
+  const style = document.createElement('style');
+  style.id = STYLE_ID;
+  style.textContent = buildPrintCss(ROOT_ID);
 
-  printWindow.document.open();
-  printWindow.document.write(printHTML);
-  printWindow.document.close();
+  const root = document.createElement('div');
+  root.id = ROOT_ID;
+  root.innerHTML = coverPage + bodyContent;
 
-  // Wait for embedded images to load before opening the print dialog so the
-  // PDF is not generated with blank images.
-  const triggerPrint = () => {
-    printWindow.focus();
-    printWindow.print();
+  document.head.appendChild(style);
+  document.body.appendChild(root);
+
+  let cleaned = false;
+  const cleanup = () => {
+    if (cleaned) return;
+    cleaned = true;
+    window.removeEventListener('afterprint', cleanup);
+    root.remove();
+    style.remove();
   };
 
-  const images = Array.from(printWindow.document.images);
+  let printed = false;
+  const doPrint = () => {
+    if (printed) return;
+    printed = true;
+    window.addEventListener('afterprint', cleanup);
+    try {
+      window.print();
+    } catch (e) {
+      console.error('PDF print error', e);
+      alert('이 환경에서는 인쇄가 차단되어 있습니다. 크롬 등 외부 브라우저에서 다시 시도해 주세요.');
+    }
+    // Fallback cleanup in case afterprint never fires (some browsers).
+    setTimeout(cleanup, 60000);
+  };
+
+  // Wait for embedded base64 images to load so the PDF isn't blank.
+  const images = Array.from(root.querySelectorAll('img'));
   if (images.length === 0) {
-    setTimeout(triggerPrint, 300);
+    setTimeout(doPrint, 200);
     return;
   }
 
   let loaded = 0;
-  let done = false;
   const checkDone = () => {
     loaded += 1;
-    if (!done && loaded >= images.length) {
-      done = true;
-      setTimeout(triggerPrint, 200);
-    }
+    if (loaded >= images.length) setTimeout(doPrint, 150);
   };
   images.forEach(img => {
     if (img.complete) {
@@ -510,5 +560,5 @@ export const exportToPdf = (content: GeneratedContent, userData: UserInputData) 
     }
   });
   // Safety fallback in case some load events never fire.
-  setTimeout(() => { if (!done) { done = true; triggerPrint(); } }, 3000);
+  setTimeout(doPrint, 3000);
 };

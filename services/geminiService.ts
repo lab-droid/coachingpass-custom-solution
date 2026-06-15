@@ -973,12 +973,14 @@ export const generateReportSection = async (
   const contentParts: any[] = [];
   const ai = getAiClient();
 
+  let hasAttachedFiles = false;
   try {
     const fileCategories = [files.resume, files.cover, files.notice, files.posting, files.preTask, files.ptMaterial, files.otherFiles];
     for (const category of fileCategories) {
       if (category && category.length > 0) {
         for (const file of category) {
           contentParts.push(await processFile(file));
+          hasAttachedFiles = true;
         }
       }
     }
@@ -1361,6 +1363,20 @@ export const generateReportSection = async (
     }
   }
 
+  // [요청사항 강제 반영] 사용자가 초기 단계에서 요청사항을 기재한 경우, 모든 섹션의
+  // 주제 프롬프트에 요청사항을 직접 주입하여 어떤 솔루션 유형/섹션에서도 누락되지 않도록 보장한다.
+  const trimmedRequirements = (requirements || "").trim();
+  if (trimmedRequirements) {
+    specificPrompt += `
+
+      [본 섹션 사용자 요청사항 필수 반영 — 절대 누락 금지]
+      - 사용자가 직접 기재한 아래 요청사항은 이 섹션의 내용에 반드시 직접적으로 반영되어야 합니다. 단순한 형식적 언급이 아니라, 요청사항의 취지가 실제 분석/전략 내용 속에 구체적으로 녹아들어야 합니다.
+      - 사용자 요청사항: "${trimmedRequirements}"
+      - 만약 이 섹션의 주제와 요청사항의 관련성이 낮더라도, 최소 한 단락 이상을 할애하여 요청사항과 연결 지어 서술하세요.
+      - 요청사항과 직접 관련된 핵심 문장은 반드시 노란색 배경 강조(<span style="background-color:yellow; color:black;">...</span>)로 표시하여, 결과물에서 요청사항이 반영되었음이 한눈에 드러나도록 하세요.
+    `;
+  }
+
   const isAiRecommended = targetPageCount === 'AI 추천';
   const targetPages = isAiRecommended ? 50 : parseInt(targetPageCount);
   const minPagesPerSection = Math.floor(targetPages / 5);
@@ -1380,13 +1396,18 @@ export const generateReportSection = async (
     - [금지 사항] 리포트 어디에서도(특히 결론 부분) 'AI', '인공지능', 'Gemini', '언어 모델' 혹은 이 문서를 AI가 생성했다는 어떠한 언급도 하지 마세요. 당신은 오직 '코칭패스 전문 컨설턴트'로서 직접 작성한 것처럼 행동해야 합니다.
     - 첨부된 파일(이력서, 자소서 등)에 다른 기업명이 적혀 있더라도, 해당 기업은 무시하고 오직 '${company}' 기업에 대한 솔루션을 생성해야 합니다.
     - 지원자의 경험 데이터는 첨부파일에서 추출하되, 기업 및 직무 관련 분석 내용은 반드시 '${company}'와 '${job}'에 100% 맞춰야 합니다.
+    ${hasAttachedFiles
+      ? `- [첨부 서류 필수 참고 — 절대 원칙] 사용자가 첨부한 서류(이력서, 자기소개서, 채용공고, 사전과제, PT자료 등)는 무조건 정독·분석하여 그 실제 내용을 솔루션에 반드시 반영해야 합니다. 첨부 서류에 기재된 지원자의 구체적인 경험, 프로젝트, 수치, 표현을 직접 인용하거나 근거로 삼아 작성하고, 첨부 서류를 무시한 일반론적·추상적 내용으로 채우는 것을 엄격히 금지합니다.`
+      : `- [서류 미첨부] 첨부된 서류가 없으므로, 입력된 기업·직무·요청사항 정보를 바탕으로 가장 현실적이고 구체적인 맞춤 솔루션을 작성하세요.`}
+    - [중복 작성 절대 금지] 본 솔루션은 5개 챕터로 구성되며, 각 챕터는 서로 명확히 구분되는 고유한 내용을 다룹니다. 현재 섹션은 위에 지정된 '작성 주제'에만 집중하고, 다른 챕터에서 다룰 내용을 미리 끌어와 중복 서술하지 마세요. 동일한 문장·표현·사례·표를 반복하지 말고, 같은 의미를 다른 말로 되풀이하는 것도 피하여 모든 내용이 새롭고 밀도 있게 채워지도록 하세요.
 
     이번 단계에서는 아래 주제에 대해서만 집중적으로 작성합니다.
     
     [사용자 특별 요청사항 (필수 반영 사항)]
     - [딥리서치 및 신뢰성] 허위내용(할루시네이션)이 절대 없도록 심층 리서치(Deep Research)를 수행하여 검증되고 신뢰성 있는 정보만을 논리적으로 작성하세요.
-    - [요청사항 100% 반영] 다음 사용자의 요청사항은 어떠한 경우에도 솔루션 내용에 100% 반영되어야 합니다.
-    ${requirements ? requirements : "특별한 요청사항 없음"}
+    ${trimmedRequirements
+      ? `- [요청사항 100% 반영 — 최우선 절대 원칙] 사용자가 초기 단계에서 직접 기재한 아래 요청사항은 어떠한 경우에도 솔루션 내용에 100% 직접 반영되어야 하며, 절대로 누락하거나 형식적으로만 다루어서는 안 됩니다.\n      사용자 요청사항: "${trimmedRequirements}"\n      - 위 요청사항의 취지를 각 섹션의 분석/전략 내용 속에 구체적으로 녹여내고, 요청사항과 직접 관련된 핵심 문장은 반드시 노란색 배경 강조(<span style="background-color:yellow; color:black;">...</span>)로 표시하여 결과물에서 요청사항 반영 여부가 명확히 드러나도록 하세요.`
+      : `- [요청사항] 특별한 요청사항 없음`}
 
     [들어가면 절대 안되는 내용 (Forbidden Content)]
     아래 명시된 내용은 솔루션 작성 시 어떤 경우에도 포함되지 않도록 절대 배제하십시오:
