@@ -910,6 +910,7 @@ export const generateCoverImage = async (company: string, job: string, name: str
           - Text Alignment: Center all rows.
           - Font: Modern, elegant, high-contrast Korean serif or sans-serif font in metallic gold.
           - [CRITICAL] The Korean characters must be rendered perfectly without any artifacts, corruption, or missing strokes.
+          - [CRITICAL - NO DUPLICATE TEXT] Render each text element EXACTLY ONCE. Never repeat, duplicate, mirror, or echo any title, word, phrase, or character anywhere on the cover (no shadow-duplicates, no background repetition, no extra stray text). The cover must contain only the rows listed above, each appearing a single time.
           
           Style: Executive, Sophisticated, High-end, Professional.
         `;
@@ -967,7 +968,8 @@ export const generateReportSection = async (
   targetPageCount: string,
   analysisOptions: string,
   files: { resume: File[]; cover: File[]; notice: File[]; posting: File[]; preTask: File[]; ptMaterial: File[]; otherFiles: File[] },
-  customChapters?: string[]
+  customChapters?: string[],
+  previousSectionsContext?: string
 ): Promise<string> => {
   
   const contentParts: any[] = [];
@@ -1393,6 +1395,14 @@ export const generateReportSection = async (
   const minPagesPerSection = Math.max(1, Math.floor(minTotalPages / 5));
   const maxPagesPerSection = Math.max(minPagesPerSection + 1, Math.ceil(maxTotalPages / 5));
 
+  // 현재 날짜 (최신 정보 기준점)
+  const todayStr = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  // 이전 챕터 내용 (순차 생성 시 전달됨) — 중복 방지용
+  const prevContextBlock = (previousSectionsContext && previousSectionsContext.trim())
+    ? `\n    [이미 작성된 이전 챕터들의 핵심 내용 — 중복 절대 금지]\n    아래는 앞 챕터에서 이미 다룬 내용입니다. 이번 챕터에서는 아래 내용과 중복되는 주제·문장·사례·표를 절대 반복하지 말고, 이번 챕터 고유의 새로운 관점과 내용으로만 작성하세요.\n    ----------\n    ${previousSectionsContext.trim()}\n    ----------\n`
+    : '';
+
   const prompt = `
     [현재 분석 대상 (가장 중요한 데이터 - 이 정보가 모든 분석의 기준이 되어야 함)]
     - 지원 기업명: ${company}
@@ -1411,11 +1421,12 @@ export const generateReportSection = async (
       ? `- [첨부 서류 필수 참고 — 절대 원칙] 사용자가 첨부한 서류(이력서, 자기소개서, 채용공고, 사전과제, PT자료 등)는 무조건 정독·분석하여 그 실제 내용을 솔루션에 반드시 반영해야 합니다. 첨부 서류에 기재된 지원자의 구체적인 경험, 프로젝트, 수치, 표현을 직접 인용하거나 근거로 삼아 작성하고, 첨부 서류를 무시한 일반론적·추상적 내용으로 채우는 것을 엄격히 금지합니다.`
       : `- [서류 미첨부] 첨부된 서류가 없으므로, 입력된 기업·직무·요청사항 정보를 바탕으로 가장 현실적이고 구체적인 맞춤 솔루션을 작성하세요.`}
     - [중복 작성 절대 금지] 본 솔루션은 5개 챕터로 구성되며, 각 챕터는 서로 명확히 구분되는 고유한 내용을 다룹니다. 현재 섹션은 위에 지정된 '작성 주제'에만 집중하고, 다른 챕터에서 다룰 내용을 미리 끌어와 중복 서술하지 마세요. 동일한 문장·표현·사례·표를 반복하지 말고, 같은 의미를 다른 말로 되풀이하는 것도 피하여 모든 내용이 새롭고 밀도 있게 채워지도록 하세요.
-
+${prevContextBlock}
     이번 단계에서는 아래 주제에 대해서만 집중적으로 작성합니다.
     
     [사용자 특별 요청사항 (필수 반영 사항)]
-    - [딥리서치 및 신뢰성] 허위내용(할루시네이션)이 절대 없도록 심층 리서치(Deep Research)를 수행하여 검증되고 신뢰성 있는 정보만을 논리적으로 작성하세요.
+    - [딥리서치 및 신뢰성 — 허위 금지] 허위내용(할루시네이션)이 절대 없도록 구글 검색 기반 심층 리서치(Deep Research)를 수행하여 검증되고 신뢰성 있는 정보만을 논리적으로 작성하세요. 확인되지 않은 추측, 지어낸 수치·사실·인용은 절대 작성하지 마세요.
+    - [최신 정보 기준] 오늘 날짜는 ${todayStr} 입니다. 모든 기업 정보·산업 동향·채용 정보·통계는 이 시점 기준으로 가장 최신화된 사실이어야 하며, 오래되었거나 변경된 정보를 쓰지 마세요.
     ${trimmedRequirements
       ? `- [요청사항 100% 반영 — 최우선 절대 원칙] 사용자가 초기 단계에서 직접 기재한 아래 요청사항은 어떠한 경우에도 솔루션 내용에 100% 직접 반영되어야 하며, 절대로 누락하거나 형식적으로만 다루어서는 안 됩니다.\n      사용자 요청사항: "${trimmedRequirements}"\n      - 위 요청사항의 취지를 각 섹션의 분석/전략 내용 속에 구체적으로 녹여내고, 요청사항과 직접 관련된 핵심 문장은 반드시 노란색 배경 강조(<span style="background-color:yellow; color:black;">...</span>)로 표시하여 결과물에서 요청사항 반영 여부가 명확히 드러나도록 하세요.`
       : `- [요청사항] 특별한 요청사항 없음`}

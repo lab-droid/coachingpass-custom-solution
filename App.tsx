@@ -357,35 +357,41 @@ const App: React.FC = () => {
           effectiveAnalysisOptions = `${effectiveAnalysisOptions ? effectiveAnalysisOptions + "\n\n" : ""}[맞춤 설계 테마]: ${data.customSubTheme || '개인 자율 설정형'}`;
       }
 
-      const [
-          section1, section2, section3, section4, section5,
-          coverImage,
-          img1, img2, img3, img4, img5
-      ] = await Promise.all([
-          runTask('section1', () => generateReportSection(1, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, effectiveRequirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, effectiveAnalysisOptions, fileContext, customChapters)),
-          runTask('section2', () => generateReportSection(2, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, effectiveRequirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, effectiveAnalysisOptions, fileContext, customChapters)),
-          runTask('section3', () => generateReportSection(3, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, effectiveRequirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, effectiveAnalysisOptions, fileContext, customChapters)),
-          runTask('section4', () => generateReportSection(4, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, effectiveRequirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, effectiveAnalysisOptions, fileContext, customChapters)),
-          runTask('section5', () => generateReportSection(5, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName, effectiveRequirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount, effectiveAnalysisOptions, fileContext, customChapters)),
-          data.includeCoverImage 
+      // 이미지(표지·인포그래픽)는 챕터 본문과 독립적이므로 백그라운드에서 동시 진행한다.
+      const imagesPromise = Promise.all([
+          data.includeCoverImage
             ? runTask('cover', () => generateCoverImage(data.companyName, data.jobTitle, data.studentName, data.solutionType))
             : Promise.resolve(undefined),
-          data.includeBodyImages
-            ? runTask('img1', () => generateInfographic(topics[0]))
-            : Promise.resolve(undefined),
-          data.includeBodyImages
-            ? runTask('img2', () => generateInfographic(topics[1]))
-            : Promise.resolve(undefined),
-          data.includeBodyImages
-            ? runTask('img3', () => generateInfographic(topics[2]))
-            : Promise.resolve(undefined),
-          data.includeBodyImages
-            ? runTask('img4', () => generateInfographic(topics[3]))
-            : Promise.resolve(undefined),
-          data.includeBodyImages
-            ? runTask('img5', () => generateInfographic(topics[4]))
-            : Promise.resolve(undefined)
+          data.includeBodyImages ? runTask('img1', () => generateInfographic(topics[0])) : Promise.resolve(undefined),
+          data.includeBodyImages ? runTask('img2', () => generateInfographic(topics[1])) : Promise.resolve(undefined),
+          data.includeBodyImages ? runTask('img3', () => generateInfographic(topics[2])) : Promise.resolve(undefined),
+          data.includeBodyImages ? runTask('img4', () => generateInfographic(topics[3])) : Promise.resolve(undefined),
+          data.includeBodyImages ? runTask('img5', () => generateInfographic(topics[4])) : Promise.resolve(undefined),
       ]);
+
+      // 챕터 본문은 반드시 1장부터 순차적으로 생성한다.
+      // 직전까지 작성된 내용을 요약해 다음 챕터에 전달하여 중복 작성을 방지한다.
+      const stripForContext = (html: string): string =>
+          (html || '')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .slice(0, 1500);
+
+      const sections: string[] = [];
+      let accumulatedContext = '';
+      for (let i = 1; i <= 5; i++) {
+          const text = await runTask(`section${i}`, () => generateReportSection(
+              i, data.solutionType, data.companyName, data.jobTitle, data.interviewType, data.studentName,
+              effectiveRequirements, data.forbiddenContent, data.referenceLinks, data.targetPageCount,
+              effectiveAnalysisOptions, fileContext, customChapters, accumulatedContext
+          ));
+          sections.push(text);
+          accumulatedContext += `\n[챕터 ${i} 요약]\n${stripForContext(text)}\n`;
+      }
+      const [section1, section2, section3, section4, section5] = sections;
+
+      const [coverImage, img1, img2, img3, img4, img5] = await imagesPromise;
 
       const finalContent = {
           section1, section2, section3, section4, section5,
@@ -558,7 +564,7 @@ const App: React.FC = () => {
                     {step === ProcessStep.CREATING_DOC && "최종: 최종 결과물(Docx) 병합 및 생성 중..."}
                 </h3>
                 <p className="text-amber-400/80 text-lg">AI가 합격의 열쇠를 만들고 있습니다</p>
-                <p className="text-slate-500 text-sm mt-4">병렬 처리를 통해 생성 속도를 극대화했습니다. 잠시만 기다려주세요.</p>
+                <p className="text-slate-500 text-sm mt-4">1챕터부터 순차적으로 정밀 생성하여 중복 없는 고품질 솔루션을 완성합니다. 잠시만 기다려주세요.</p>
             </div>
 
             {/* Real-time Task List */}
